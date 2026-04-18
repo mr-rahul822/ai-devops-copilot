@@ -1,0 +1,93 @@
+# =============================================================================
+# AI DevOps Copilot — Root .gitignore
+# =============================================================================
+
+# ── Environment & Secrets ────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+**/.env
+**/.env.local
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+serviceAccountKey.json
+gcp-credentials.json
+
+# ── Node.js (auth-service, frontend) ─────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+package-lock.json
+
+# ── Python (metrics-service, ai-engine) ──────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.Python
+dist/
+build/
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyd
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+.docker/
+
+# ── Database / Data ──────────────────────────────────────────────────────────
+*.sql.bak
+*.sql.backup
+pgdata/
+*.db
+*.sqlite
+
+# ── IDE & Editors ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.orig
+
+# ── OS Files ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Test Coverage ────────────────────────────────────────────────────────────
+coverage/
+.coverage
+htmlcov/
+junit.xml
+
+# ── Frontend Build Output ─────────────────────────────────────────────────────
+frontend/dist/
+frontend/.next/
+frontend/out/
+frontend/.cache/
+
+# ── Model Cache & Large Data ──────────────────────────────────────────────────
+model-cache/
+*.bin
+*.safetensors

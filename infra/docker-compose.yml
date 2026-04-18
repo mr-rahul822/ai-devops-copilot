@@ -1,0 +1,188 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpassword123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - copilot-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── KAFKA STACK ────────────────────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    container_name: zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - copilot-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      # Expose 9092 inside the Docker network, and 29092 to the host machine
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - copilot-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - copilot-net
+    # Creates the metrics-stream topic and then exits
+    command: >
+      bash -c "
+      echo 'Waiting for Kafka to be ready...' &&
+      cub kafka-ready -b kafka:9092 1 20 &&
+      kafka-topics --create --topic metrics-stream --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      echo 'Topic created successfully.'
+      "
+
+  # ── APP SERVICES ───────────────────────────────────────────────────────────
+  auth-service:
+    build: ../services/auth-service
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: authdb
+      DB_USER: authuser
+      DB_PASSWORD: authpassword123
+      JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - copilot-net
+
+  metrics-service:
+    build: ../services/metrics-service
+    container_name: metrics-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: 8001
+      DATABASE_URL: postgresql+asyncpg://authuser:authpassword123@postgres:5432/metricsdb
+      AUTH_SERVICE_URL: http://auth-service:3001
+      DEFAULT_USER_ID: 00000000-0000-0000-0000-000000000001
+      COLLECTION_INTERVAL_SECONDS: 60
+      ENVIRONMENT: development
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    networks:
+      - copilot-net
+
+  alert-service:
+    build: ../services/alert-service
+    container_name: alert-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: authdb
+      DB_USER: authuser
+      DB_PASSWORD: authpassword123
+      JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
+      KAFKA_BROKER: kafka:9092
+      KAFKA_GROUP_ID: alert-service-group
+      AUTH_SERVICE_URL: http://auth-service:3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      metrics-service:
+        condition: service_started
+    networks:
+      - copilot-net
+
+  ai-engine:
+    build: ../services/ai-engine
+    container_name: ai-engine
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      PORT: 8002
+      DATABASE_URL: postgresql+asyncpg://authuser:authpassword123@postgres:5432/authdb
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PINECONE_API_KEY: ${PINECONE_API_KEY:-}
+      PINECONE_INDEX_NAME: devops-incidents
+      METRICS_SERVICE_URL: http://metrics-service:8001
+      ALERT_SERVICE_URL: http://alert-service:3003
+      AUTH_SERVICE_URL: http://auth-service:3001
+      JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
+      EMBEDDING_MODEL: all-MiniLM-L6-v2
+    volumes:
+      - ../model-cache:/root/.cache/huggingface
+    depends_on:
+      postgres:
+        condition: service_healthy
+      metrics-service:
+        condition: service_started
+      alert-service:
+        condition: service_started
+    networks:
+      - copilot-net
+
+volumes:
+  pgdata:
+
+networks:
+  copilot-net:
+    driver: bridge

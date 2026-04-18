@@ -1,0 +1,91 @@
+# =============================================================================
+# AI DEVOPS COPILOT — HEALTH CHECK & ENDPOINT TESTING GUIDE (WINDOWS PROMPT)
+# =============================================================================
+
+Since the system uses a hardcoded UUID `00000000-0000-0000-0000-000000000001` in 
+the `metrics-service` default configuration, to make everything line up easily 
+for testing, we will register a normal user and then override their UUID in the 
+database to match the hardcoded one.
+
+Below are single-line commands suitable for Windows Command Prompt / PowerShell.
+
+---
+
+### STEP 1: Create the User and Override UUID
+
+1. Register a new user:
+   Open a terminal and run:
+   ```powershell
+   curl.exe -X POST http://localhost:3001/auth/register -H "Content-Type: application/json" -d "{\"email\":\"admin@example.com\", \"password\":\"password123\"}"
+   ```
+
+2. Force the UUID to be `000...1` in the database:
+   Run this docker command to update the ID directly in PostgreSQL:
+   ```powershell
+   docker exec -it postgres psql -U authuser -d authdb -c "UPDATE users SET id = '00000000-0000-0000-0000-000000000001' WHERE email = 'admin@example.com';"
+   ```
+   (Expected output: `UPDATE 1`)
+
+3. Login to get your permanent Token:
+   You MUST login *AFTER* you run the UPDATE command, because your token needs to contain the new `0000...1` ID.
+   ```powershell
+   curl.exe -X POST http://localhost:3001/auth/login -H "Content-Type: application/json" -d "{\"email\":\"admin@example.com\", \"password\":\"password123\"}"
+   ```
+   **Copy the "token" value from the response.** You will replace `<token>` in all the commands below.
+
+---
+
+### STEP 2: Test All Endpoints (Health Check)
+
+#### 1. Auth Service: Get Profile
+Verify your token works and your UUID is correctly set.
+```powershell
+curl.exe -H "Authorization: Bearer <token>" http://localhost:3001/auth/me
+```
+
+#### 2. Metrics Service: Manual Metrics Collection
+Forces the metrics service to immediately read CPU/RAM, save to DB, and publish to Kafka.
+```powershell
+curl.exe -X POST -H "Authorization: Bearer <token>" http://localhost:8001/metrics/collect
+```
+
+#### 3. Metrics Service: View History
+Fetches recent metrics.
+```powershell
+curl.exe -H "Authorization: Bearer <token>" "http://localhost:8001/metrics/history?user_id=00000000-0000-0000-0000-000000000001&service_name=local-machine"
+```
+
+#### 4. Alert Service: Health Check
+Checks if Alert Service is running and connected to Kafka. (No token needed).
+```powershell
+curl.exe http://localhost:3003/alerts/health
+```
+
+#### 5. Alert Service: Summary
+Fetches badge counts of open/resolved alerts.
+```powershell
+curl.exe -H "Authorization: Bearer <token>" "http://localhost:3003/alerts/summary?user_id=00000000-0000-0000-0000-000000000001"
+```
+*Expected Output: `{"open":0,"critical":0,"high":0,"medium":0,"resolved_today":0}`*
+*(Numbers will go up if you run the `python simulate_cpu.py` script to trigger alerts).*
+
+---
+
+### WHAT CONFIGURATION IS CURRENTLY MISSING?
+
+The platform core is fully wired up (Auth -> Metrics -> Kafka -> Alerts), but the following architectural elements are still missing before it becomes "Production Ready":
+
+1. **Dynamic Scheduler Matrix:**
+   Right now, the `metrics-service` background crawler only collects metrics for ONE hardcoded machine (`DEFAULT_USER_ID=0000...1`, `service_name=local-machine`). In reality, it should query a "Monitored Services" database table to find a list of AWS/Docker instances to query, pulling metrics sequentially for multiple users.
+
+2. **AI Action Logic (ai-engine):**
+   The `ai-engine` is completely empty. It needs to contain a Google Gemini (or OpenAI) prompt chain that accepts an alert (e.g. "CPU at 92% on EC2 instance") and uses an LLM to decide what to do (e.g. "Restart container", "Clear cache"). This requires API Keys in the `.env` file.
+
+3. **Action Execution Service:**
+   Once the AI decides what to do, we need a service that actually has SSH or Docker socket access to run the recovery commands. Currently, no such service exists.
+
+4. **Real Email Transporter:**
+   The notifier inside `alert-service` currently uses "Ethereal" (a fake mock SMTP server). To send real notifications, `alert-service/src/services/notifier.js` needs to be updated with real SendGrid, AWS SES, or Gmail credentials.
+
+5. **Frontend Application:**
+   There is no UI yet to allow a regular user to view their metrics/alerts in a browser.

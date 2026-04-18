@@ -1,0 +1,22 @@
+{
+  "name": "alert-service",
+  "version": "1.0.0",
+  "description": "Kafka-driven alert engine for AI DevOps Copilot",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.13",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
