@@ -180,6 +180,35 @@ services:
     networks:
       - copilot-net
 
+  # ── ACTION SERVICE (Phase 6) ──────────────────────────────────────────────
+  action-service:
+    build: ../services/action-service
+    container_name: action-service
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      PORT: 8003
+      DATABASE_URL: postgresql+asyncpg://authuser:authpassword123@postgres:5432/actionsdb
+      AUTH_SERVICE_URL: http://auth-service:3001
+      AI_ENGINE_URL: http://ai-engine:8002
+      DRY_RUN: "true"
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      # Linux / Mac — mount Docker socket for container control
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Windows (Docker Desktop) — uncomment the line below, comment out the line above
+      # - //./pipe/docker_engine://./pipe/docker_engine
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      ai-engine:
+        condition: service_started
+    networks:
+      - copilot-net
+
 volumes:
   pgdata:
 
