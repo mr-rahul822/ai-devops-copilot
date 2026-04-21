@@ -24,7 +24,7 @@ class Metric(Base):
     source: Mapped[str] = mapped_column(String(50), default="local")
     region: Mapped[str] = mapped_column(String(50), default="local")
     timestamp: Mapped[datetime] = mapped_column(
-        default=lambda: datetime.now(timezone.utc)
+        default=datetime.utcnow
     )
 
     __table_args__ = (

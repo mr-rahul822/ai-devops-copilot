@@ -19,6 +19,7 @@ from src.rag.vector_store import VectorStore
 from src.rag.retriever import Retriever
 from src.services.diagnosis_service import DiagnosisService
 from src.services.chat_service import ChatService
+from src.agents.orchestrator import AgentOrchestrator
 
 # ── Logging ──────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ retriever: Retriever = None  # type: ignore
 http_client: httpx.AsyncClient = None  # type: ignore
 diagnosis_service: DiagnosisService = None  # type: ignore
 chat_service: ChatService = None  # type: ignore
+orchestrator: AgentOrchestrator = None  # type: ignore
 
 
 # ── Lifespan ─────────────────────────────────────────────────────────────
@@ -43,7 +45,7 @@ chat_service: ChatService = None  # type: ignore
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global claude_client, vector_store, retriever, http_client
-    global diagnosis_service, chat_service
+    global diagnosis_service, chat_service, orchestrator
 
     logger.info("Starting AI Engine...")
 
@@ -66,6 +68,9 @@ async def lifespan(app: FastAPI):
     # 6. Service orchestrators
     diagnosis_service = DiagnosisService(claude_client, retriever, http_client)
     chat_service = ChatService(claude_client, retriever, http_client)
+
+    # 7. Multi-agent orchestrator (Phase 5)
+    orchestrator = AgentOrchestrator(claude_client, retriever)
 
     logger.info("AI Engine ready — port %d", settings.port)
 
@@ -90,10 +95,12 @@ app = FastAPI(
 from src.routes.diagnose import router as diagnose_router
 from src.routes.chat import router as chat_router
 from src.routes.incidents import router as incidents_router
+from src.routes.analyze import router as analyze_router
 
 app.include_router(diagnose_router)
 app.include_router(chat_router)
 app.include_router(incidents_router)
+app.include_router(analyze_router, prefix="/ai")
 
 
 # ── Health check ─────────────────────────────────────────────────────────

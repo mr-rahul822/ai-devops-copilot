@@ -155,13 +155,13 @@ services:
     build: ../services/ai-engine
     container_name: ai-engine
     restart: unless-stopped
+    env_file:
+      - ../services/ai-engine/.env
     ports:
       - "8002:8002"
     environment:
       PORT: 8002
       DATABASE_URL: postgresql+asyncpg://authuser:authpassword123@postgres:5432/authdb
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      PINECONE_API_KEY: ${PINECONE_API_KEY:-}
       PINECONE_INDEX_NAME: devops-incidents
       METRICS_SERVICE_URL: http://metrics-service:8001
       ALERT_SERVICE_URL: http://alert-service:3003

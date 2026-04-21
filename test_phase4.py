@@ -15,7 +15,7 @@ Test 2: RAG Learning Loop
   - Shows the AI now references the past incident (proves RAG works)
 
 Usage:
-  1. Set your token:   TOKEN = "<your jwt token>"
+  1. Set your token:   TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzc2NDk3NDU1LCJleHAiOjE3NzcxMDIyNTV9.bt9VcvciFN9MYxL_9S8FstJV53H4ZzY_X7fxzW-DgN0"
   2. Run:              python test_phase4.py
 """
 
@@ -29,7 +29,7 @@ import requests
 # ═══════════════════════════════════════════════════════════════════════════
 
 BASE_URL = "http://localhost:8002"
-TOKEN = "PASTE_YOUR_JWT_TOKEN_HERE"
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzc2NDk3NDU1LCJleHAiOjE3NzcxMDIyNTV9.bt9VcvciFN9MYxL_9S8FstJV53H4ZzY_X7fxzW-DgN0"
 USER_ID = "00000000-0000-0000-0000-000000000001"
 
 HEADERS = {

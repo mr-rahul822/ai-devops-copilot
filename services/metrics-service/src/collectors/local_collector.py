@@ -1,5 +1,5 @@
 import psutil
-from datetime import datetime, timezone
+from datetime import datetime
 from src.config import settings
 
 
@@ -21,5 +21,5 @@ def collect() -> dict:
         "disk_percent": disk,
         "source": "local",
         "region": "local",
-        "timestamp": datetime.now(timezone.utc),
+        "timestamp": datetime.utcnow(),
     }

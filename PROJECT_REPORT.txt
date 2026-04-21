@@ -571,3 +571,180 @@ PHASE 7 — Production Hardening
 ================================================================================
  END OF REPORT
 ================================================================================
+
+
+
+
+# Phase 4 — AI Engine: Complete Implementation Walkthrough
+
+## What Was Built
+
+The AI Engine is a Python FastAPI service (port 8002) that provides intelligent infrastructure diagnosis using Claude (Anthropic) and learns from past incident resolutions via Pinecone RAG.
+
+---
+
+## File-by-File Summary
+
+| File | Purpose |
+|------|---------|
+| `requirements.txt` | Pinned Python dependencies (FastAPI, anthropic, pinecone, sentence-transformers, etc.) |
+| `Dockerfile` | Python 3.11-slim container with build-essential for native extensions |
+| `.env` / `.env.example` | Environment variables (API keys, DB URL, service URLs) |
+| `.dockerignore` | Excludes __pycache__, .env, venv from Docker context |
+| `src/config.py` | Pydantic Settings class loading all env vars |
+| `src/database.py` | Async SQLAlchemy engine + session factory + table auto-creation |
+| `src/models.py` | `Incident` ORM model (UUID pk, metrics snapshot, AI response, resolution) |
+| `src/schemas.py` | Pydantic schemas for all request/response types |
+| `src/llm/client.py` | `ClaudeClient` — async wrapper with exponential backoff retry + JSON parser |
+| `src/llm/prompts.py` | System prompts for diagnosis (structured JSON output) and chat |
+| `src/rag/embedder.py` | `Embedder` — local sentence-transformers (all-MiniLM-L6-v2, 384 dims, free) |
+| `src/rag/vector_store.py` | `VectorStore` — Pinecone init, upsert, search (with user_id filter), delete |
+| `src/rag/retriever.py` | `Retriever` — searches Pinecone, formats results as readable LLM context |
+| `src/services/diagnosis_service.py` | 7-step orchestrator: metrics → alerts → RAG → prompt → Claude → save → respond |
+| `src/services/chat_service.py` | Chat orchestrator: gathers context + calls Claude with conversation history |
+| `src/routes/diagnose.py` | `POST /ai/diagnose` endpoint |
+| `src/routes/chat.py` | `POST /ai/chat` endpoint |
+| `src/routes/incidents.py` | `GET /ai/incidents`, `GET /ai/incidents/:id`, `POST /ai/incidents/:id/resolve` |
+| `src/main.py` | FastAPI app entry — lifespan initialises all singletons, registers routes |
+
+---
+
+## Architecture Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant AI Engine
+    participant Metrics Service
+    participant Alert Service
+    participant Claude API
+    participant Pinecone
+    participant PostgreSQL
+
+    User->>AI Engine: POST /ai/diagnose
+    AI Engine->>Metrics Service: GET /metrics/history
+    AI Engine->>Alert Service: GET /alerts
+    AI Engine->>Pinecone: Search similar incidents (RAG)
+    AI Engine->>Claude API: Send combined prompt
+    Claude API-->>AI Engine: JSON diagnosis
+    AI Engine->>PostgreSQL: Save incident
+    AI Engine-->>User: Return diagnosis
+
+    Note over User,PostgreSQL: RAG Learning Loop
+    User->>AI Engine: POST /ai/incidents/:id/resolve
+    AI Engine->>Pinecone: Embed resolved incident
+    Note over Pinecone: Future diagnoses now<br/>reference this resolution
+```
+
+---
+
+## Pinecone Setup Steps
+
+1. Go to [app.pinecone.io](https://app.pinecone.io)
+2. Sign in / create account (free tier is fine)
+3. Click **"API Keys"** in the left sidebar
+4. Copy your API key
+5. Paste it into `services/ai-engine/.env` as `PINECONE_API_KEY=pcsk_...`
+6. **You do NOT need to create the index manually** — the code auto-creates it on first startup
+
+> If you want to create it manually: Click "Indexes" → "Create Index" → Name: `devops-incidents`, Dimensions: `384`, Metric: `Cosine`, Cloud: `AWS`, Region: `us-east-1`
+
+---
+
+## How to Deploy
+
+### Step 1: Set API Keys
+
+Create a `.env` file in the `infra/` folder (next to docker-compose.yml):
+
+```env
+ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
+PINECONE_API_KEY=pcsk_your-key-here
+```
+
+Or export them in your terminal before running docker-compose:
+
+```powershell
+$env:ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
+$env:PINECONE_API_KEY="pcsk_your-key-here"
+```
+
+### Step 2: Build and Start
+
+```powershell
+cd c:\Users\rahul\Desktop\code\ai-devops-copilot\infra
+docker-compose up --build -d
+```
+
+> [!NOTE]
+> First build will take 5-10 minutes because the AI Engine installs PyTorch + sentence-transformers. Subsequent builds are fast due to Docker layer caching.
+
+### Step 3: Verify
+
+```powershell
+curl.exe http://localhost:8002/ai/health
+```
+
+Expected output:
+```json
+{"status":"ok","pinecone":"connected","llm":"ready"}
+```
+
+---
+
+## Test Script
+
+Edit `test_phase4.py` in the project root:
+1. Replace `TOKEN = "PASTE_YOUR_JWT_TOKEN_HERE"` with your actual JWT token
+2. Run: `python test_phase4.py`
+
+The script runs 3 tests:
+1. **Diagnose** — sends a CPU_SPIKE alert → gets AI diagnosis → verifies DB save
+2. **RAG Loop** — resolves the incident → creates a similar one → checks if AI references the past fix
+3. **Chat** — asks a conversational question about the infrastructure
+
+---
+
+## SQL Verification Queries
+
+```sql
+-- See all incidents
+SELECT id, service_name, alert_type, severity, status, root_cause 
+FROM incidents;
+
+-- See resolved incidents (these are in Pinecone)
+SELECT id, resolution, resolved_at 
+FROM incidents WHERE status = 'resolved';
+
+-- Count by status
+SELECT status, COUNT(*) 
+FROM incidents GROUP BY status;
+```
+
+Run via Docker:
+```powershell
+docker exec -it postgres psql -U authuser -d authdb -c "SELECT id, service_name, alert_type, severity, status FROM incidents;"
+```
+
+---
+
+## What You Should See When Phase 4 is Fully Working
+
+1. **Health endpoint** returns `{"status":"ok","pinecone":"connected","llm":"ready"}`
+2. **Diagnose endpoint** returns a structured JSON with root cause, fix steps, severity, confidence score
+3. **Incident is saved** to PostgreSQL with status "open"
+4. **Resolve endpoint** marks it resolved AND embeds the resolution vector into Pinecone
+5. **Second similar diagnose** — Claude's response now includes a `similar_past_incident` field referencing the first resolution
+6. **Chat endpoint** answers conversational questions with live metrics/alerts context
+7. **Docker logs** show Claude API token usage and Pinecone operations
+
+---
+
+## Model Note
+
+The code uses `claude-sonnet-4-20250514` by default (cheaper for development). To switch to `claude-opus-4-5`, edit `src/llm/client.py` line 20:
+
+```python
+MODEL = "claude-opus-4-5-20250520"
+```
+
