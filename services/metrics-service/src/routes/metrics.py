@@ -4,7 +4,7 @@ from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
-from sqlalchemy import select, distinct
+from sqlalchemy import select, distinct, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
@@ -71,27 +71,21 @@ async def health():
 # GET /metrics/latest
 # ---------------------------------------------------------------------------
 
-@router.get("/latest", response_model=MetricResponse)
+@router.get("/latest", response_model=list[MetricResponse])
 async def get_latest(
-    user_id: str = Query(..., description="UUID of the user"),
-    service_name: str = Query(..., description="Name of the monitored service"),
     db: AsyncSession = Depends(get_db),
     _auth: dict = Depends(require_auth),
 ):
-    """Returns the single most recent metric for the given user + service."""
+    """Returns the single most recent metric for all services."""
+    user_id = _auth.get("user", {}).get("id", settings.default_user_id)
+    
     result = await db.execute(
         select(Metric)
-        .where(Metric.user_id == user_id, Metric.service_name == service_name)
-        .order_by(Metric.timestamp.desc())
-        .limit(1)
+        .distinct(Metric.service_name)
+        .order_by(Metric.service_name, Metric.timestamp.desc())
     )
-    row = result.scalars().first()
-    if not row:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No metrics found for service '{service_name}'.",
-        )
-    return row
+    rows = result.scalars().all()
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -100,31 +94,106 @@ async def get_latest(
 
 @router.get("/history", response_model=list[MetricResponse])
 async def get_history(
-    user_id: str = Query(..., description="UUID of the user"),
-    service_name: str = Query(..., description="Name of the monitored service"),
+    user_id: Optional[str] = Query(default=None, description="UUID of the user"),
+    service_name: Optional[str] = Query(default=None, description="Name of the monitored service"),
     hours: int = Query(default=1, ge=1, le=24, description="How many hours of history (1–24)"),
     db: AsyncSession = Depends(get_db),
     _auth: dict = Depends(require_auth),
 ):
     """Returns all metric readings for the last N hours (default 1, max 24)."""
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = datetime.utcnow() - timedelta(hours=hours)
 
-    result = await db.execute(
-        select(Metric)
-        .where(
-            Metric.user_id == user_id,
-            Metric.service_name == service_name,
-            Metric.timestamp >= since,
-        )
-        .order_by(Metric.timestamp.asc())
-    )
+    query = select(Metric).where(Metric.timestamp >= since)
+    if service_name:
+        query = query.where(Metric.service_name == service_name)
+    
+    query = query.order_by(Metric.timestamp.asc())
+    
+    result = await db.execute(query)
     rows = result.scalars().all()
-    if not rows:
+    if not rows and service_name:
         raise HTTPException(
             status_code=404,
             detail=f"No metrics found for service '{service_name}' in the last {hours}h.",
         )
     return rows
+
+
+# ---------------------------------------------------------------------------
+# GET /metrics  (alias for /metrics/history — used by React dashboard)
+# ---------------------------------------------------------------------------
+
+@router.get("", response_model=list[MetricResponse])
+async def get_metrics_root(
+    user_id: Optional[str] = Query(default=None, description="UUID of the user"),
+    service_name: Optional[str] = Query(default=None, description="Name of the monitored service"),
+    hours: int = Query(default=1, ge=1, le=24, description="How many hours of history (1–24)"),
+    db: AsyncSession = Depends(get_db),
+    _auth: dict = Depends(require_auth),
+):
+    """Alias for /metrics/history — the React frontend calls GET /metrics."""
+    return await get_history(
+        user_id=user_id, service_name=service_name, hours=hours, db=db, _auth=_auth
+    )
+
+
+# ---------------------------------------------------------------------------
+# GET /metrics/summary  (stat cards for the React dashboard)
+# ---------------------------------------------------------------------------
+
+@router.get("/summary")
+async def get_summary(
+    db: AsyncSession = Depends(get_db),
+    _auth: dict = Depends(require_auth),
+):
+    """
+    Returns aggregated metrics for the dashboard stat cards.
+
+    Response shape:
+    {
+        "active_services": int,
+        "avg_cpu": float,
+        "avg_ram": float,
+        "peak_cpu": float,
+        "total_readings": int,
+        "status": "healthy" | "warning" | "critical"
+    }
+
+    Calculated from the last 5 minutes of metric data.
+    """
+    since = datetime.utcnow() - timedelta(minutes=5)
+
+    result = await db.execute(
+        select(
+            func.count(distinct(Metric.service_name)).label("active_services"),
+            func.avg(Metric.cpu_percent).label("avg_cpu"),
+            func.avg(Metric.ram_percent).label("avg_ram"),
+            func.max(Metric.cpu_percent).label("peak_cpu"),
+            func.count(Metric.id).label("total_readings"),
+        ).where(Metric.timestamp >= since)
+    )
+    row = result.one()
+
+    avg_cpu = round(float(row.avg_cpu or 0), 1)
+    avg_ram = round(float(row.avg_ram or 0), 1)
+    peak_cpu = round(float(row.peak_cpu or 0), 1)
+
+    # Determine overall status
+    if avg_cpu > 90 or avg_ram > 90:
+        status = "critical"
+    elif avg_cpu > 70 or avg_ram > 70:
+        status = "warning"
+    else:
+        status = "healthy"
+
+    return {
+        "active_services": int(row.active_services or 0),
+        "avg_cpu": avg_cpu,
+        "avg_ram": avg_ram,
+        "peak_cpu": peak_cpu,
+        "total_readings": int(row.total_readings or 0),
+        "status": status,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -149,15 +218,15 @@ async def get_services(
 # POST /metrics/collect  (manual trigger)
 # ---------------------------------------------------------------------------
 
-@router.post("/collect", response_model=MetricResponse)
+@router.post("/collect", response_model=list[MetricResponse])
 async def collect_now(_auth: dict = Depends(require_auth)):
     """
     Manually triggers one collection cycle immediately.
     Useful for testing without waiting for the 60-second interval.
     """
     try:
-        row = await run_once()
-        return row
+        rows = await run_once()
+        return rows
     except Exception as exc:
         logger.error("Manual collection failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail=str(exc))

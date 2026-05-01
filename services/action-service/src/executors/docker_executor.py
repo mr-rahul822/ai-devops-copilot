@@ -10,6 +10,7 @@ asyncio.get_event_loop().run_in_executor() to avoid blocking the event loop.
 
 import asyncio
 import logging
+import platform
 import time
 
 import docker
@@ -32,13 +33,17 @@ class DockerExecutor(BaseExecutor):
 
     def __init__(self):
         try:
-            self._client = docker.from_env()
+            if platform.system() == "Windows":
+                self._client = docker.DockerClient(base_url="npipe:////./pipe/docker_engine")
+            else:
+                self._client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+            self._client.ping()
             self._connected = True
-            logger.info("DockerExecutor: connected to Docker daemon")
+            logger.info("Docker client connected successfully")
         except Exception as e:
+            logger.error(f"Docker client connection failed: {e}. Container actions will not work.")
             self._client = None
             self._connected = False
-            logger.warning("DockerExecutor: Docker not available — %s", e)
 
     @property
     def executor_type(self) -> str:
@@ -65,6 +70,9 @@ class DockerExecutor(BaseExecutor):
 
     async def execute(self, action: dict) -> dict:
         """Dispatch to the correct Docker action handler."""
+        if self._client is None:
+            raise RuntimeError("Docker client is not available. Check Docker socket mount.")
+
         action_type = action.get("action_type")
         target = action.get("target_service")
         params = action.get("params", {})
@@ -88,6 +96,8 @@ class DockerExecutor(BaseExecutor):
     # ── ACTION 1: restart_container ───────────────────────────────────────
 
     def _restart_container(self, target: str, params: dict) -> dict:
+        if self._client is None:
+            raise RuntimeError("Docker client is not available. Check Docker socket mount.")
         try:
             container = self._client.containers.get(target)
             previous_status = container.status
@@ -131,6 +141,8 @@ class DockerExecutor(BaseExecutor):
     # ── ACTION 2: stop_container ──────────────────────────────────────────
 
     def _stop_container(self, target: str, params: dict) -> dict:
+        if self._client is None:
+            raise RuntimeError("Docker client is not available. Check Docker socket mount.")
         try:
             container = self._client.containers.get(target)
 
@@ -168,6 +180,8 @@ class DockerExecutor(BaseExecutor):
     # ── ACTION 3: fetch_container_logs ────────────────────────────────────
 
     def _fetch_container_logs(self, target: str, params: dict) -> dict:
+        if self._client is None:
+            raise RuntimeError("Docker client is not available. Check Docker socket mount.")
         try:
             container = self._client.containers.get(target)
 
@@ -203,6 +217,8 @@ class DockerExecutor(BaseExecutor):
     # ── ACTION 4: get_container_stats ─────────────────────────────────────
 
     def _get_container_stats(self, target: str, params: dict) -> dict:
+        if self._client is None:
+            raise RuntimeError("Docker client is not available. Check Docker socket mount.")
         try:
             container = self._client.containers.get(target)
 

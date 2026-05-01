@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import settings
 from src.database import init_db
 from src.routes.metrics import router as metrics_router
+from src.routes.onboarding import router as onboarding_router
 from src.scheduler import start_scheduler, stop_scheduler
 from src.kafka.producer import start_producer, stop_producer
 
@@ -58,8 +60,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Mount routes
 app.include_router(metrics_router)
+app.include_router(onboarding_router)
 
 
 # ---------------------------------------------------------------------------

@@ -9,10 +9,12 @@ The Action Service executes AI-recommended infrastructure fixes:
 """
 
 import logging
+import platform
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.database import init_db
 from src.routes.actions import router as actions_router
@@ -71,6 +73,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Mount routes
 app.include_router(actions_router)
 
@@ -98,4 +108,33 @@ async def root():
         "service": "action-service",
         "version": "1.0.0",
         "docs": "/docs",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Health endpoint — reports Docker client connectivity
+# ---------------------------------------------------------------------------
+
+@app.get("/health")
+async def health():
+    docker_status = "unknown"
+    docker_error = None
+
+    try:
+        from src.executors.docker_executor import DockerExecutor
+        executor = DockerExecutor()
+        if executor.is_connected:
+            docker_status = "connected"
+        else:
+            docker_status = "unavailable"
+            docker_error = "Docker client not connected — check socket mount"
+    except Exception as e:
+        docker_status = "error"
+        docker_error = str(e)
+
+    return {
+        "status": "ok",
+        "docker_client": docker_status,
+        "docker_error": docker_error,
+        "platform": platform.system(),
     }

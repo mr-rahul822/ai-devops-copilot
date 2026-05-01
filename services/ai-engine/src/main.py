@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import settings
 from src.database import init_db
@@ -88,6 +89,14 @@ app = FastAPI(
     description="LLM-powered diagnosis, RAG, and chat for cloud infrastructure",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Routes ───────────────────────────────────────────────────────────────

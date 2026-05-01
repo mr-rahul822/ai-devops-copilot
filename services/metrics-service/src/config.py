@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     collection_interval_seconds: int = 60
     environment: str = "development"
     kafka_broker: str = "kafka:9092"  # Phase 3: Kafka producer
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_default_region: str = "us-east-1"
+    encryption_key: str = ""
 
     class Config:
         env_file = ".env"

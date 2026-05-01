@@ -60,7 +60,7 @@ def _to_out(row: Incident) -> IncidentOut:
 
 @router.get("/incidents", response_model=list[IncidentOut])
 async def list_incidents(
-    user_id: str = Query(...),
+    user_id: str = Query(default="00000000-0000-0000-0000-000000000001"),
     status: Optional[str] = Query(default=None),
     authorization: Optional[str] = Header(default=None),
     db: AsyncSession = Depends(get_db),

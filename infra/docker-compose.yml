@@ -104,6 +104,9 @@ services:
     build: ../services/metrics-service
     container_name: metrics-service
     restart: unless-stopped
+    env_file:
+      - .env
+      - ../services/metrics-service/.env
     ports:
       - "8001:8001"
     environment:
@@ -114,6 +117,10 @@ services:
       COLLECTION_INTERVAL_SECONDS: 60
       ENVIRONMENT: development
       KAFKA_BROKER: kafka:9092
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-I_NZZVow_HLrCYvQyOLDQlpr38VLtCAuZn_FyBo0Nvw=}
     depends_on:
       postgres:
         condition: service_healthy
@@ -134,7 +141,7 @@ services:
       PORT: 3003
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: authdb
+      DB_NAME: alertsdb
       DB_USER: authuser
       DB_PASSWORD: authpassword123
       JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
@@ -185,6 +192,9 @@ services:
     build: ../services/action-service
     container_name: action-service
     restart: unless-stopped
+    env_file:
+      - .env
+      - ../services/action-service/.env
     ports:
       - "8003:8003"
     environment:
@@ -193,18 +203,40 @@ services:
       AUTH_SERVICE_URL: http://auth-service:3001
       AI_ENGINE_URL: http://ai-engine:8002
       DRY_RUN: "true"
-      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     volumes:
-      # Linux / Mac — mount Docker socket for container control
+      # Use the Linux docker socket path on all operating systems.
+      # Docker Desktop (WSL2 backend) automatically maps this to the Windows Docker engine.
       - /var/run/docker.sock:/var/run/docker.sock
-      # Windows (Docker Desktop) — uncomment the line below, comment out the line above
-      # - //./pipe/docker_engine://./pipe/docker_engine
     depends_on:
       postgres:
         condition: service_healthy
       auth-service:
         condition: service_started
       ai-engine:
+        condition: service_started
+    networks:
+      - copilot-net
+
+  # ── FRONTEND (Phase 7) ───────────────────────────────────────────────────
+  frontend:
+    build: ../frontend
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      auth-service:
+        condition: service_started
+      metrics-service:
+        condition: service_started
+      alert-service:
+        condition: service_started
+      ai-engine:
+        condition: service_started
+      action-service:
         condition: service_started
     networks:
       - copilot-net

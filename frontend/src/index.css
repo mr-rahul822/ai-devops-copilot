@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Tailwind v4: enable class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Inter font is loaded via index.html <link> tag */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle page fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Polling spinner */
+@keyframes spin4px {
+  to { transform: rotate(360deg); }
+}
+.polling-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  border: 1px solid #2563eb;
+  border-top-color: transparent;
+  animation: spin4px 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }

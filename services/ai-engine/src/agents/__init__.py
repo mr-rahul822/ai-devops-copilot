@@ -2,10 +2,10 @@
 src/agents/ — Multi-Agent Orchestration System (Phase 5).
 
 Four specialised agents run in a pipeline:
-  1. LogAnalyzerAgent     — pattern-matching on raw logs (no LLM)
-  2. MetricsAnalyzerAgent — statistical analysis on time-series (no LLM)
-  3. DecisionAgent        — synthesises findings via Claude API (LLM)
-  4. ExecutorAgent         — prepares a safe action plan (no LLM)
+  1. LogAnalyzerAgent     — regex pre-filter + LLM semantic analysis  ┐ parallel
+  2. MetricsAnalyzerAgent — statistical analysis on time-series       ┘
+  3. DecisionAgent        — synthesises findings via Claude API (LLM)   sequential
+  4. ExecutorAgent         — prepares a safe action plan                sequential
 
 The pipeline is coordinated by AgentOrchestrator.
 """

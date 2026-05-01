@@ -479,3 +479,66 @@ async def get_action_logs(
         "logs": details.get("logs", ""),
         "line_count": details.get("line_count", 0),
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 8 — DELETE /actions/{action_id}  (soft delete)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.delete("/{action_id}")
+async def delete_action(
+    action_id: str,
+    request: Request,
+    user: dict = Depends(verify_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Soft-delete an action by setting status = REJECTED.
+
+    This preserves the full audit trail for compliance. The action is NOT
+    removed from the database — it is marked as rejected with a note
+    indicating it was deleted by the user.
+    """
+    try:
+        aid = uuid.UUID(action_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid action_id format")
+
+    action = await db.get(Action, aid)
+    if action is None:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    if action.status in ("EXECUTING", "COMPLETED"):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete an action that is executing or completed",
+        )
+
+    # Soft delete: mark as REJECTED instead of removing from DB
+    action.status = "REJECTED"
+    action.error_message = "Deleted by user"
+    await db.commit()
+
+    # Record audit trail
+    user_id_str = user.get("id") or user.get("userId") or user.get("user_id", "")
+    try:
+        user_id = uuid.UUID(str(user_id_str))
+    except ValueError:
+        user_id = action.user_id
+
+    ip_address = request.client.host if request.client else None
+
+    await AuditLogger.log_event(
+        action_id=action.id,
+        user_id=user_id,
+        event_type="ACTION_DELETED",
+        detail="Soft-deleted by user (status set to REJECTED)",
+        ip_address=ip_address,
+        db=db,
+    )
+
+    return {
+        "action_id": str(action.id),
+        "status": "REJECTED",
+        "message": "Action soft-deleted (status set to REJECTED)",
+    }

@@ -19,8 +19,8 @@ class Metric(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     service_name: Mapped[str] = mapped_column(String(100), nullable=False)
     cpu_percent: Mapped[float] = mapped_column(Float, nullable=False)
-    ram_percent: Mapped[float] = mapped_column(Float, nullable=False)
-    disk_percent: Mapped[float] = mapped_column(Float, nullable=False)
+    ram_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
+    disk_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
     source: Mapped[str] = mapped_column(String(50), default="local")
     region: Mapped[str] = mapped_column(String(50), default="local")
     timestamp: Mapped[datetime] = mapped_column(

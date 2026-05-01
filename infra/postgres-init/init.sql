@@ -16,6 +16,11 @@ SELECT 'CREATE DATABASE actionsdb' WHERE NOT EXISTS (
   SELECT FROM pg_database WHERE datname = 'actionsdb'
 )\gexec
 
+-- Alert service database
+SELECT 'CREATE DATABASE alertsdb' WHERE NOT EXISTS (
+  SELECT FROM pg_database WHERE datname = 'alertsdb'
+)\gexec
+
 -- Grant authuser full access to metricsdb so metrics-service can connect
 -- and auto-create its tables on startup.
 \connect metricsdb
@@ -28,6 +33,14 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO authuser;
 -- and auto-create its tables on startup.
 \connect actionsdb
 GRANT ALL PRIVILEGES ON DATABASE actionsdb TO authuser;
+GRANT ALL ON SCHEMA public TO authuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO authuser;
+
+-- Grant authuser full access to alertsdb so alert-service can connect
+-- and auto-create its alerts table on startup.
+\connect alertsdb
+GRANT ALL PRIVILEGES ON DATABASE alertsdb TO authuser;
 GRANT ALL ON SCHEMA public TO authuser;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authuser;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO authuser;
