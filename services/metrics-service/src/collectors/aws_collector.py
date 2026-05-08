@@ -3,9 +3,9 @@ src/collectors/aws_collector.py — AWS EC2 metrics via CloudWatch.
 
 Collects:
   - CPU utilisation  → standard AWS/EC2 namespace
-  - RAM (mem_used_percent) → CloudWatch Agent custom namespace "DevOpsCopilot"
-  - Disk (disk_used_percent) → CloudWatch Agent custom namespace "DevOpsCopilot"
-  - Network I/O      → CloudWatch Agent custom namespace "DevOpsCopilot"
+  - RAM (mem_used_percent) → CloudWatch Agent custom namespace "SentinelAI"
+  - Disk (disk_used_percent) → CloudWatch Agent custom namespace "SentinelAI"
+  - Network I/O      → CloudWatch Agent custom namespace "SentinelAI"
 
 If the CloudWatch Agent is NOT installed on the EC2 instance, RAM/Disk/Network
 metrics will be returned as 0.0 and a warning will be logged.
@@ -22,7 +22,7 @@ from src.config import settings
 logger = logging.getLogger(__name__)
 
 # Custom namespace configured in the CloudWatch Agent on EC2
-CW_AGENT_NAMESPACE = "DevOpsCopilot"
+CW_AGENT_NAMESPACE = "SentinelAI"
 
 
 def get_boto_session():
@@ -199,7 +199,7 @@ def collect() -> list[dict]:
     Collects metrics from all running AWS EC2 instances.
 
     - CPU utilisation  → AWS/EC2 standard namespace (always available)
-    - RAM, Disk, Network → DevOpsCopilot custom namespace (CloudWatch Agent)
+    - RAM, Disk, Network → SentinelAI custom namespace (CloudWatch Agent)
 
     Returns a list of raw dicts consumed by the normalizer.
     """

@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title="AI DevOps Copilot — Action Service",
+    title="Sentinel AI — Action Service",
     description=(
         "Executes AI-recommended infrastructure fixes with approval workflow, "
         "Docker/AWS executors, and immutable audit trail."

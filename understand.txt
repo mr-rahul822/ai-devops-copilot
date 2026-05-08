@@ -1,0 +1,2167 @@
+
+rahul  …\ai-devops-copilot   main !?  ♥ 22:34  find . -type f -name "*.py" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v __pycache__
+∙ 
+grep: The term 'grep' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+
+[General Feedback]
+  The most similar commands are:
+    ➤ gres
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:46  Get-ChildItem -Recurse -File -Include *.py,*.js,*.jsx |
+∙ Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*__pycache__*" }
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\dist\assets
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          22-04-2026    15:33         383150 index-D9klr0es.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\api
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:04            585 actions.js
+-a---          21-04-2026    11:03            316 ai.js
+-a---          21-04-2026    11:03            212 alerts.js
+-a---          21-04-2026    11:03            301 auth.js
+-a---          21-04-2026    11:03           1245 client.js
+-a---          21-04-2026    11:03            289 metrics.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\components\actions
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:11           2889 ActionsTable.jsx
+-a---          21-04-2026    11:11           2437 ConfirmModal.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\components\alerts
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:09            515 AlertBadge.jsx
+-a---          21-04-2026    11:09           3725 AlertsTable.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\components\chat
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:10           1974 ChatInput.jsx
+-a---          21-04-2026    11:10           1740 ChatMessage.jsx
+-a---          21-04-2026    11:10           2022 ChatWindow.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\components\common
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:05            410 EmptyState.jsx
+-a---          21-04-2026    11:05            352 LoadingSpinner.jsx
+-a---          21-04-2026    11:05           1739 StatusBadge.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\components\dashboard
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:07           3489 CopilotDecisions.jsx
+-a---          22-04-2026    15:27           3804 LiveEventStream.jsx
+-a---          22-04-2026    13:51           3128 MetricsChart.jsx
+-a---          21-04-2026    11:06            707 StatCard.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\components\layout
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          22-04-2026    15:25            365 AppLayout.jsx
+-a---          22-04-2026    15:25           3275 Header.jsx
+-a---          22-04-2026    15:24          11552 Sidebar.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\pages
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          22-04-2026    15:29           7083 Actions.jsx
+-a---          22-04-2026    15:28          10175 AIInsights.jsx
+-a---          21-04-2026    11:09           6755 Alerts.jsx
+-a---          21-04-2026    11:10           6200 Chat.jsx
+-a---          22-04-2026    15:28           8297 CloudConfiguration.jsx
+-a---          22-04-2026    15:30          12835 Dashboard.jsx
+-a---          21-04-2026    11:06           4653 Login.jsx
+-a---          21-04-2026    11:12           6013 Settings.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\store
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:03            833 useStore.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src\utils
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:04            841 formatters.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend\src
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          22-04-2026    15:22           1579 App.jsx
+-a---          21-04-2026    11:22            705 main.jsx
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\frontend
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    10:58            758 eslint.config.js
+-a---          21-04-2026    11:02            241 vite.config.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\action-service\src\executors
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    09:30            643 __init__.py
+-a---          21-04-2026    09:31           8918 aws_executor.py
+-a---          21-04-2026    09:31           1678 base_executor.py
+-a---          21-04-2026    09:31           9571 docker_executor.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\action-service\src\middleware
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    09:32             29 __init__.py
+-a---          21-04-2026    09:32           2328 verify_token.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\action-service\src\routes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    09:33             25 __init__.py
+-a---          21-04-2026    09:33          18111 actions.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\action-service\src
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    09:32           5551 approval_gate.py
+-a---          21-04-2026    09:32           2222 audit_logger.py
+-a---          21-04-2026    09:30           1254 database.py
+-a---          21-04-2026    11:24           3725 main.py
+-a---          21-04-2026    09:30           3760 models.py
+-a---          21-04-2026    09:30           3092 schemas.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\ai-engine\src\agents
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          19-04-2026    15:11            865 __init__.py
+-a---          19-04-2026    15:11           3317 base_agent.py
+-a---          19-04-2026    15:13           6113 decision_agent.py
+-a---          19-04-2026    15:13           6515 executor_agent.py
+-a---          19-04-2026    15:12           5917 log_analyzer_agent.py
+-a---          19-04-2026    15:12           7943 metrics_analyzer_agent.py
+-a---          19-04-2026    15:14           9076 orchestrator.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\ai-engine\src\llm
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          18-04-2026    01:59             22 __init__.py
+-a---          19-04-2026    16:34           5497 client.py
+-a---          19-04-2026    15:14           3162 prompts.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\ai-engine\src\rag
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          18-04-2026    02:00             22 __init__.py
+-a---          18-04-2026    14:23           3213 embedder.py
+-a---          18-04-2026    02:00           3165 retriever.py
+-a---          18-04-2026    02:00           5136 vector_store.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\ai-engine\src\routes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          18-04-2026    02:02             25 __init__.py
+-a---          19-04-2026    15:14           3429 analyze.py
+-a---          18-04-2026    02:02           1100 chat.py
+-a---          18-04-2026    02:02           1450 diagnose.py
+-a---          21-04-2026    23:58           5377 incidents.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\ai-engine\src\services
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          18-04-2026    02:01             27 __init__.py
+-a---          18-04-2026    02:01           4417 chat_service.py
+-a---          18-04-2026    02:01           7597 diagnosis_service.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\ai-engine\src
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          18-04-2026    02:02             18 __init__.py
+-a---          18-04-2026    01:59            696 config.py
+-a---          18-04-2026    01:59            948 database.py
+-a---          21-04-2026    11:24           4558 main.py
+-a---          18-04-2026    01:59           1534 models.py
+-a---          18-04-2026    01:59           2783 schemas.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src\config
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:18           1595 db.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src\controllers
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    23:52           4035 alertController.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src\engine
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:19           6412 alertEngine.js
+-a---          17-04-2026    08:18           1581 rules.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src\kafka
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:20           5247 consumer.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src\middleware
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:18            729 verifyToken.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src\routes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:20           2358 alerts.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src\services
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:19           5078 alertService.js
+-a---          17-04-2026    08:19           2669 notifier.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\alert-service\src
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:23           3997 index.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\auth-service\src\config
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    12:39           1077 db.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\auth-service\src\controllers
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    12:41           3413 authController.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\auth-service\src\middleware
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    12:41            729 verifyToken.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\auth-service\src\models
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    12:41           1007 User.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\auth-service\src\routes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    12:41            453 auth.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\auth-service\src
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          21-04-2026    11:23            977 index.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\auth-service
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          20-04-2026    08:25            242 index.js
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\metrics-service\src\collectors
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    13:05             21 __init__.py
+-a---          22-04-2026    08:33           3505 aws_collector.py
+-a---          18-04-2026    13:41            755 local_collector.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\metrics-service\src\kafka
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:21             40 __init__.py
+-a---          17-04-2026    08:21           3496 producer.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\metrics-service\src\routes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    13:05             17 __init__.py
+-a---          22-04-2026    08:34           5972 metrics.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\services\metrics-service\src
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          16-04-2026    13:07             30 __init__.py
+-a---          22-04-2026    08:33            628 config.py
+-a---          16-04-2026    13:04           1041 database.py
+-a---          21-04-2026    11:24           3270 main.py
+-a---          18-04-2026    13:42           1382 models.py
+-a---          16-04-2026    13:04           1008 normalizer.py
+-a---          22-04-2026    08:34           4241 scheduler.py
+-a---          16-04-2026    13:04            906 schemas.py
+
+    Directory: C:\Users\rahul\Desktop\code\ai-devops-copilot\test-tools
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          17-04-2026    08:24           1188 simulate_cpu.py
+-a---          19-04-2026    16:33            504 test_gemini.py
+-a---          18-04-2026    13:43           8763 test_phase4.py
+-a---          19-04-2026    15:15          11840 test_phase5.py
+-a---          21-04-2026    10:42          19234 test_phase6.py
+-a---          18-04-2026    13:45           4655 verify_fixes.py
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:48 
+
+
+# 2. Frontend API files (where mismatches are)
+cat frontend/src/api/metrics.js
+cat frontend/src/api/actions.js
+cat frontend/src/api/alerts.js
+cat frontend/src/api/ai.js
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:57  cat frontend/src/api/metrics.js
+import { metricsClient } from './client'
+
+export const getLatestMetrics = () =>
+  metricsClient.get('/metrics/latest')
+
+export const getMetricsHistory = (params) =>
+  metricsClient.get('/metrics', { params })
+
+export const getMetricsSummary = () =>
+  metricsClient.get('/metrics/summary')
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:57  cat frontend/src/api/actions.js
+import { actionsClient } from './client'
+
+export const executeAction = (data) =>
+  actionsClient.post('/actions/execute', data)
+
+export const approveAction = (actionId) =>
+  actionsClient.post(`/actions/${actionId}/approve`)
+
+export const rejectAction = (actionId, reason) =>
+  actionsClient.post(`/actions/${actionId}/reject`, { reason })
+
+export const getActions = (params) =>
+  actionsClient.get('/actions', { params })
+
+export const getAction = (actionId) =>
+  actionsClient.get(`/actions/${actionId}`)
+
+export const getActionsHealth = () =>
+  actionsClient.get('/actions/health')
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:57  cat frontend/src/api/alerts.js
+import { alertsClient } from './client'
+
+export const getAlerts = (params) =>
+  alertsClient.get('/alerts', { params })
+
+export const resolveAlert = (alertId) =>
+  alertsClient.post(`/alerts/${alertId}/resolve`)
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:57  cat frontend/src/api/ai.js
+import { aiClient } from './client'
+
+export const analyzeIncident = (data) =>
+  aiClient.post('/ai/analyze', data)
+
+export const chatWithAI = (data) =>
+  aiClient.post('/ai/chat', data)
+
+export const getIncidents = () =>
+  aiClient.get('/ai/incidents')
+
+export const getAIHealth = () =>
+  aiClient.get('/ai/health')
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:57 
+
+
+
+# 3. Backend route files (actual endpoints)
+cat services/metrics-service/src/routes/metrics.py
+cat services/action-service/src/routes/actions.py
+cat services/alert-service/src/routes/alerts.js
+
+
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:58  cat services/metrics-service/src/routes/metrics.py
+import logging
+from datetime import datetime, timezone, timedelta
+from typing import Optional
+
+import httpx
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from sqlalchemy import select, distinct
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.config import settings
+from src.database import get_db
+from src.models import Metric
+from src.schemas import MetricResponse, HealthResponse, ServicesResponse
+from src.scheduler import scheduler, run_once
+
+router = APIRouter(prefix="/metrics", tags=["metrics"])
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Internal helper — JWT verification via auth-service
+# ---------------------------------------------------------------------------
+
+async def _verify_token(authorization: str) -> dict:
+    """
+    Calls auth-service GET /auth/me to validate the Bearer token.
+    Returns the user payload or raises HTTPException.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or malformed Authorization header.")
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(
+                f"{settings.auth_service_url}/auth/me",
+                headers={"Authorization": authorization},
+            )
+    except httpx.ConnectError:
+        raise HTTPException(status_code=503, detail="Auth service is unreachable.")
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=503, detail="Auth service timed out.")
+
+    if response.status_code == 401:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    if response.status_code != 200:
+        raise HTTPException(status_code=503, detail="Auth service returned an unexpected error.")
+
+    return response.json()
+
+
+# ---------------------------------------------------------------------------
+# Dependency: resolves + validates JWT from Authorization header
+# ---------------------------------------------------------------------------
+
+async def require_auth(authorization: Optional[str] = Header(default=None)) -> dict:
+    return await _verify_token(authorization)
+
+
+# ---------------------------------------------------------------------------
+# GET /metrics/health
+# ---------------------------------------------------------------------------
+
+@router.get("/health", response_model=HealthResponse)
+async def health():
+    """Returns service health and scheduler status."""
+    scheduler_status = "running" if scheduler.running else "stopped"
+    return HealthResponse(status="ok", scheduler=scheduler_status)
+
+
+# ---------------------------------------------------------------------------
+# GET /metrics/latest
+# ---------------------------------------------------------------------------
+
+@router.get("/latest", response_model=list[MetricResponse])
+async def get_latest(
+    db: AsyncSession = Depends(get_db),
+    _auth: dict = Depends(require_auth),
+):
+    """Returns the single most recent metric for all services."""
+    user_id = _auth.get("user", {}).get("id", settings.default_user_id)
+
+    result = await db.execute(
+        select(Metric)
+        .distinct(Metric.service_name)
+        .order_by(Metric.service_name, Metric.timestamp.desc())
+    )
+    rows = result.scalars().all()
+    return rows
+
+
+# ---------------------------------------------------------------------------
+# GET /metrics/history
+# ---------------------------------------------------------------------------
+
+@router.get("/history", response_model=list[MetricResponse])
+async def get_history(
+    user_id: str = Query(..., description="UUID of the user"),
+    service_name: str = Query(..., description="Name of the monitored service"),
+    hours: int = Query(default=1, ge=1, le=24, description="How many hours of history (1–24)"),
+    db: AsyncSession = Depends(get_db),
+    _auth: dict = Depends(require_auth),
+):
+    """Returns all metric readings for the last N hours (default 1, max 24)."""
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+    result = await db.execute(
+        select(Metric)
+        .where(
+            Metric.service_name == service_name,
+            Metric.timestamp >= since,
+        )
+        .order_by(Metric.timestamp.asc())
+    )
+    rows = result.scalars().all()
+    if not rows:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No metrics found for service '{service_name}' in the last {hours}h.",
+        )
+    return rows
+
+
+# ---------------------------------------------------------------------------
+# GET /metrics/services
+# ---------------------------------------------------------------------------
+
+@router.get("/services", response_model=ServicesResponse)
+async def get_services(
+    user_id: str = Query(..., description="UUID of the user"),
+    db: AsyncSession = Depends(get_db),
+    _auth: dict = Depends(require_auth),
+):
+    """Returns a distinct list of service names being monitored for a user."""
+    result = await db.execute(
+        select(distinct(Metric.service_name)).where(Metric.user_id == user_id)
+    )
+    services = [row for row in result.scalars().all()]
+    return ServicesResponse(services=services)
+
+
+# ---------------------------------------------------------------------------
+# POST /metrics/collect  (manual trigger)
+# ---------------------------------------------------------------------------
+
+@router.post("/collect", response_model=list[MetricResponse])
+async def collect_now(_auth: dict = Depends(require_auth)):
+    """
+    Manually triggers one collection cycle immediately.
+    Useful for testing without waiting for the 60-second interval.
+    """
+    try:
+        rows = await run_once()
+        return rows
+    except Exception as exc:
+        logger.error("Manual collection failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:58  cat services/action-service/src/routes/actions.py
+"""
+src/routes/actions.py — All REST endpoints for the Action Service.
+
+Endpoints:
+  POST   /actions/execute           — request an infrastructure action
+  POST   /actions/{id}/approve      — approve a pending action → execute
+  POST   /actions/{id}/reject       — reject a pending action
+  GET    /actions                   — list actions with filters
+  GET    /actions/health            — health check
+  GET    /actions/{id}              — single action + full audit trail
+  GET    /actions/{id}/logs         — container log content
+"""
+
+import uuid
+import logging
+from datetime import datetime, timezone
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from sqlalchemy import select, desc
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.database import get_db
+from src.models import Action, AuditLog
+from src.schemas import (
+    ActionExecuteRequest,
+    ActionRejectRequest,
+    ActionExecuteResponse,
+    ActionDetailResponse,
+    ActionResponse,
+    AuditLogResponse,
+    HealthResponse,
+    ALLOWED_ACTION_TYPES,
+    ALLOWED_EXECUTOR_TYPES,
+    LOW_RISK_ACTIONS,
+)
+from src.approval_gate import ApprovalGate
+from src.audit_logger import AuditLogger
+from src.executors import get_executor
+from src.middleware.verify_token import verify_token
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/actions", tags=["actions"])
+
+
+# ── Helper: serialize UUIDs for JSON responses ────────────────────────────────
+
+def _action_to_dict(action: Action) -> dict:
+    """Convert an Action ORM object to a JSON-safe dict."""
+    return {
+        "id": str(action.id),
+        "user_id": str(action.user_id),
+        "action_type": action.action_type,
+        "target_service": action.target_service,
+        "executor_type": action.executor_type,
+        "params": action.params or {},
+        "status": action.status,
+        "risk_level": action.risk_level,
+        "requires_approval": action.requires_approval,
+        "approved_by": str(action.approved_by) if action.approved_by else None,
+        "approved_at": action.approved_at,
+        "executed_at": action.executed_at,
+        "completed_at": action.completed_at,
+        "result": action.result,
+        "error_message": action.error_message,
+        "incident_id": str(action.incident_id) if action.incident_id else None,
+        "created_at": action.created_at,
+    }
+
+
+def _audit_to_dict(log: AuditLog) -> dict:
+    """Convert an AuditLog ORM object to a JSON-safe dict."""
+    return {
+        "id": str(log.id),
+        "action_id": str(log.action_id),
+        "user_id": str(log.user_id),
+        "event_type": log.event_type,
+        "event_detail": log.event_detail,
+        "ip_address": log.ip_address,
+        "timestamp": log.timestamp,
+    }
+
+
+# ── Helper: run the actual executor ──────────────────────────────────────────
+
+async def _execute_action(action: Action, db: AsyncSession) -> dict:
+    """
+    Run the executor for the given action, update status + result in DB,
+    and log audit events.
+
+    Returns:
+        The executor result dict.
+    """
+    # Mark EXECUTING
+    action.status = "EXECUTING"
+    action.executed_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    await AuditLogger.log_event(
+        action_id=action.id,
+        user_id=action.user_id,
+        event_type="ACTION_EXECUTING",
+        detail=f"Executing {action.action_type} on {action.target_service}",
+        db=db,
+    )
+
+    try:
+        executor = get_executor(action.executor_type)
+        result = await executor.execute({
+            "action_type": action.action_type,
+            "target_service": action.target_service,
+            "params": action.params or {},
+        })
+
+        if result.get("success"):
+            action.status = "COMPLETED"
+            action.result = result
+            action.completed_at = datetime.now(timezone.utc)
+            await db.commit()
+
+            await AuditLogger.log_event(
+                action_id=action.id,
+                user_id=action.user_id,
+                event_type="ACTION_COMPLETED",
+                detail=result.get("message", "Action completed"),
+                db=db,
+            )
+        else:
+            action.status = "FAILED"
+            action.error_message = result.get("message", "Unknown error")
+            action.result = result
+            await db.commit()
+
+            await AuditLogger.log_event(
+                action_id=action.id,
+                user_id=action.user_id,
+                event_type="ACTION_FAILED",
+                detail=result.get("message", "Action failed"),
+                db=db,
+            )
+
+        return result
+
+    except Exception as e:
+        action.status = "FAILED"
+        action.error_message = str(e)
+        await db.commit()
+
+        await AuditLogger.log_event(
+            action_id=action.id,
+            user_id=action.user_id,
+            event_type="ACTION_FAILED",
+            detail=f"Exception: {str(e)}",
+            db=db,
+        )
+        raise
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 7 — GET /actions/health  (must be BEFORE /{action_id} to avoid clash)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/health")
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """Health check — report Docker/AWS connectivity + pending action count."""
+    # Docker status
+    try:
+        from src.executors.docker_executor import DockerExecutor
+        docker_exec = DockerExecutor()
+        docker_status = "connected" if docker_exec.is_connected else "disconnected"
+    except Exception:
+        docker_status = "disconnected"
+
+    # AWS status
+    try:
+        from src.executors.aws_executor import AWSExecutor
+        aws_exec = AWSExecutor()
+        aws_status = "configured" if aws_exec.is_configured else "not_configured"
+    except Exception:
+        aws_status = "not_configured"
+
+    # Pending actions count
+    result = await db.execute(
+        select(Action).where(Action.status == "PENDING_APPROVAL")
+    )
+    pending = len(result.scalars().all())
+
+    return {
+        "status": "ok",
+        "docker": docker_status,
+        "aws": aws_status,
+        "pending_actions": pending,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 1 — POST /actions/execute
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.post("/execute")
+async def execute_action(
+    body: ActionExecuteRequest,
+    request: Request,
+    user: dict = Depends(verify_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Request an infrastructure action.
+
+    If requires_approval is True  → creates PENDING_APPROVAL, returns action_id.
+    If requires_approval is False → executes immediately (LOW risk actions only).
+    """
+    # Validate action_type
+    if body.action_type not in ALLOWED_ACTION_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid action_type '{body.action_type}'. "
+                   f"Allowed: {ALLOWED_ACTION_TYPES}",
+        )
+
+    # Validate executor_type
+    if body.executor_type not in ALLOWED_EXECUTOR_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid executor_type '{body.executor_type}'. "
+                   f"Allowed: {ALLOWED_EXECUTOR_TYPES}",
+        )
+
+    # Safety: force approval for non-LOW risk actions
+    if body.action_type not in LOW_RISK_ACTIONS and body.risk_level != "LOW":
+        body.requires_approval = True
+
+    ip_address = request.client.host if request.client else None
+
+    # Create the action record
+    action = await ApprovalGate.create_pending_action(
+        action_data=body.model_dump(),
+        db=db,
+        ip_address=ip_address,
+    )
+
+    # If no approval needed (LOW risk / read-only) → execute immediately
+    if not body.requires_approval:
+        # Auto-approve
+        action.status = "APPROVED"
+        action.approved_by = action.user_id
+        action.approved_at = datetime.now(timezone.utc)
+        await db.commit()
+
+        await AuditLogger.log_event(
+            action_id=action.id,
+            user_id=action.user_id,
+            event_type="ACTION_APPROVED",
+            detail="Auto-approved (low risk, no approval required)",
+            ip_address=ip_address,
+            db=db,
+        )
+
+        try:
+            result = await _execute_action(action, db)
+            return {
+                "action_id": str(action.id),
+                "status": action.status,
+                "message": result.get("message", "Action executed"),
+                "result": result,
+                "executed_at": action.executed_at,
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    # Approval required → return pending
+    return {
+        "action_id": str(action.id),
+        "status": "PENDING_APPROVAL",
+        "message": (
+            f"Action created. Approve at POST /actions/{action.id}/approve "
+            f"or reject at POST /actions/{action.id}/reject"
+        ),
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 2 — POST /actions/{action_id}/approve
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.post("/{action_id}/approve")
+async def approve_action(
+    action_id: str,
+    request: Request,
+    user: dict = Depends(verify_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """Approve a pending action and execute it immediately."""
+    try:
+        aid = uuid.UUID(action_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid action_id format")
+
+    # Resolve user_id from the authenticated user
+    user_id_str = user.get("id") or user.get("userId") or user.get("user_id", "")
+    try:
+        user_id = uuid.UUID(str(user_id_str))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Cannot resolve user ID from token")
+
+    ip_address = request.client.host if request.client else None
+
+    # Approve
+    try:
+        action = await ApprovalGate.approve_action(
+            action_id=aid,
+            user_id=user_id,
+            db=db,
+            ip_address=ip_address,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Execute immediately
+    try:
+        result = await _execute_action(action, db)
+        return {
+            "action_id": str(action.id),
+            "status": action.status,
+            "result": result,
+            "executed_at": action.executed_at,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Execution failed: {str(e)}",
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 3 — POST /actions/{action_id}/reject
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.post("/{action_id}/reject")
+async def reject_action(
+    action_id: str,
+    body: ActionRejectRequest = ActionRejectRequest(),
+    request: Request = None,
+    user: dict = Depends(verify_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reject a pending action."""
+    try:
+        aid = uuid.UUID(action_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid action_id format")
+
+    user_id_str = user.get("id") or user.get("userId") or user.get("user_id", "")
+    try:
+        user_id = uuid.UUID(str(user_id_str))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Cannot resolve user ID from token")
+
+    ip_address = request.client.host if request.client else None
+
+    try:
+        action = await ApprovalGate.reject_action(
+            action_id=aid,
+            user_id=user_id,
+            reason=body.reason or "Rejected by user",
+            db=db,
+            ip_address=ip_address,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "action_id": str(action.id),
+        "status": "REJECTED",
+        "message": f"Action rejected: {body.reason}",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 4 — GET /actions
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("")
+async def list_actions(
+    user_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    target_service: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=100),
+    user: dict = Depends(verify_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """List actions with optional filters, newest first."""
+    query = select(Action).order_by(desc(Action.created_at)).limit(limit)
+
+    if user_id:
+        query = query.where(Action.user_id == uuid.UUID(user_id))
+    if status:
+        query = query.where(Action.status == status)
+    if target_service:
+        query = query.where(Action.target_service == target_service)
+
+    result = await db.execute(query)
+    actions = result.scalars().all()
+
+    return {
+        "count": len(actions),
+        "actions": [_action_to_dict(a) for a in actions],
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 5 — GET /actions/{action_id}
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/{action_id}")
+async def get_action(
+    action_id: str,
+    user: dict = Depends(verify_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get single action with full audit trail."""
+    try:
+        aid = uuid.UUID(action_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid action_id format")
+
+    action = await db.get(Action, aid)
+    if action is None:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    audit_trail = await AuditLogger.get_action_history(aid, db)
+
+    return {
+        "action": _action_to_dict(action),
+        "audit_trail": [_audit_to_dict(log) for log in audit_trail],
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 6 — GET /actions/{action_id}/logs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/{action_id}/logs")
+async def get_action_logs(
+    action_id: str,
+    user: dict = Depends(verify_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Retrieve container log content from a fetch_container_logs action result.
+    Only valid when the action was fetch_container_logs.
+    """
+    try:
+        aid = uuid.UUID(action_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid action_id format")
+
+    action = await db.get(Action, aid)
+    if action is None:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    if action.action_type != "fetch_container_logs":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Action {action_id} is '{action.action_type}', not 'fetch_container_logs'",
+        )
+
+    if action.status != "COMPLETED" or not action.result:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Action has no result yet (status: {action.status})",
+        )
+
+    details = action.result.get("details", {})
+    return {
+        "action_id": str(action.id),
+        "target_service": action.target_service,
+        "logs": details.get("logs", ""),
+        "line_count": details.get("line_count", 0),
+    }
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:59  cat services/alert-service/src/routes/alerts.js
+const express = require('express');
+const router = express.Router();
+
+const kafkaConsumer = require('../kafka/consumer');
+const alertController = require('../controllers/alertController');
+const verifyToken = require('../middleware/verifyToken');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Public
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * GET /alerts/health
+ * Returns service liveness + Kafka consumer status.
+ * No auth required — used by Docker healthcheck and load balancers.
+ */
+router.get('/health', (req, res) => {
+  const { connected, running } = kafkaConsumer.status();
+  res.status(200).json({
+    status: 'ok',
+    kafka: connected ? 'connected' : 'disconnected',
+    consumer: running ? 'running' : 'stopped',
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Protected — require valid JWT
+// ─────────────────────────────────────────────────────────────────────────────
+
+// IMPORTANT: /summary and /:id must come BEFORE the root GET /
+// otherwise Express matches "summary" and "resolve" as :id params.
+
+/**
+ * GET /alerts/summary?user_id=<uuid>
+ * Returns dashboard badge counts.
+ */
+router.get('/summary', verifyToken, alertController.getSummary);
+
+/**
+ * GET /alerts/:id
+ * Returns a single alert by UUID.
+ */
+router.get('/:id', verifyToken, alertController.getAlertById);
+
+/**
+ * POST /alerts/:id/resolve
+ * Marks an alert as resolved.
+ */
+router.post('/:id/resolve', verifyToken, alertController.resolveAlert);
+
+/**
+ * GET /alerts?user_id=&status=&severity=
+ * Returns list of alerts, newest first.
+ */
+router.get('/', verifyToken, alertController.getAlerts);
+
+module.exports = router;
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:59 
+
+
+
+
+
+# 4. AI agents
+cat services/ai-engine/src/agents/orchestrator.py
+cat services/ai-engine/src/agents/log_analyzer_agent.py
+
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 09:59  cat services/ai-engine/src/agents/orchestrator.py
+"""
+src/agents/orchestrator.py — Multi-Agent Pipeline Orchestrator.
+
+Runs the four agents in sequence:
+  1. LogAnalyzerAgent      (pattern matching)
+  2. MetricsAnalyzerAgent  (statistics)
+  3. DecisionAgent         (Claude LLM — critical)
+  4. ExecutorAgent         (planning)
+
+Each agent's output feeds into the next.  Non-critical agent failures
+produce fallback dicts so the pipeline can continue.  If the
+DecisionAgent (Agent 3) fails, the pipeline halts because no decision
+can be made without the LLM.
+
+Saves the final result to PostgreSQL via existing database/models code.
+
+Reuses existing Phase 4 code:
+  - src/llm/client.py      → ClaudeClient
+  - src/rag/retriever.py   → Retriever
+  - src/database.py        → AsyncSessionLocal
+  - src/models.py          → Incident
+"""
+
+import json
+import logging
+import time
+import uuid
+
+from src.agents.log_analyzer_agent import LogAnalyzerAgent
+from src.agents.metrics_analyzer_agent import MetricsAnalyzerAgent
+from src.agents.decision_agent import DecisionAgent
+from src.agents.executor_agent import ExecutorAgent
+from src.database import AsyncSessionLocal
+from src.models import Incident
+from src.llm.client import ClaudeClient
+from src.rag.retriever import Retriever
+
+logger = logging.getLogger(__name__)
+
+
+class AgentOrchestrator:
+    """Coordinates the 4-agent pipeline and persists the result."""
+
+    PIPELINE_VERSION = "multi-agent-v1"
+
+    def __init__(self, claude_client: ClaudeClient, retriever: Retriever):
+        self._claude = claude_client
+        self._retriever = retriever
+
+        # Instantiate agents
+        self._log_agent = LogAnalyzerAgent()
+        self._metrics_agent = MetricsAnalyzerAgent()
+        self._decision_agent = DecisionAgent(claude_client, retriever)
+        self._executor_agent = ExecutorAgent()
+
+    async def run(self, input_data: dict) -> dict:
+        """
+        Execute the full 4-agent pipeline.
+
+        Required input_data keys:
+            user_id, service_name, raw_logs, current_cpu, current_ram
+        Optional:
+            alert_id, alert_type, metrics_history
+        """
+        start = time.time()
+        agents_completed = 0
+
+        user_id = input_data.get("user_id", "")
+        service_name = input_data.get("service_name", "unknown")
+
+        # ── AGENT 1: Log Analyzer ─────────────────────────────────────────
+        log_analysis = await self._log_agent.safe_run({
+            "raw_logs": input_data.get("raw_logs", ""),
+        })
+        agents_completed += 1
+        logger.info(
+            "Agent 1 complete: primary_error_type=%s, severity=%s",
+            log_analysis.get("primary_error_type", "?"),
+            log_analysis.get("log_severity", "?"),
+        )
+
+        # ── AGENT 2: Metrics Analyzer ─────────────────────────────────────
+        metrics_analysis = await self._metrics_agent.safe_run({
+            "metrics_history": input_data.get("metrics_history", []),
+            "current_cpu": input_data.get("current_cpu", 0.0),
+            "current_ram": input_data.get("current_ram", 0.0),
+        })
+        agents_completed += 1
+        logger.info(
+            "Agent 2 complete: anomaly_score=%s, cpu_trend=%s",
+            metrics_analysis.get("anomaly_score", "?"),
+            metrics_analysis.get("cpu_trend", "?"),
+        )
+
+        # ── AGENT 3: Decision (LLM — CRITICAL) ───────────────────────────
+        decision = await self._decision_agent.safe_run({
+            "log_analysis": log_analysis,
+            "metrics_analysis": metrics_analysis,
+            "alert_type": input_data.get("alert_type", "UNKNOWN"),
+            "service_name": service_name,
+            "user_id": user_id,
+        })
+
+        # If DecisionAgent failed, we cannot continue
+        if decision.get("fallback"):
+            elapsed = round((time.time() - start) * 1000)
+            logger.error("Pipeline halted — DecisionAgent failed.")
+            return {
+                "error": decision.get("error", "DecisionAgent failed"),
+                "pipeline_version": self.PIPELINE_VERSION,
+                "agents_completed": agents_completed,
+                "log_analysis": log_analysis,
+                "metrics_analysis": metrics_analysis,
+                "decision": decision,
+                "processing_time_ms": elapsed,
+            }
+
+        agents_completed += 1
+        logger.info(
+            "Agent 3 complete: action=%s, confidence=%s",
+            decision.get("recommended_action", "?"),
+            decision.get("confidence", "?"),
+        )
+
+        # ── AGENT 4: Executor (planning) ──────────────────────────────────
+        action_plan = await self._executor_agent.safe_run({
+            "decision": decision,
+            "user_id": user_id,
+            "service_name": service_name,
+        })
+        agents_completed += 1
+        logger.info(
+            "Agent 4 complete: risk=%s, approval_needed=%s",
+            action_plan.get("risk_level", "?"),
+            action_plan.get("requires_approval", "?"),
+        )
+
+        elapsed = round((time.time() - start) * 1000)
+
+        # ── Persist incident to PostgreSQL ────────────────────────────────
+        incident_id = await self._save_incident(
+            user_id=user_id,
+            service_name=service_name,
+            alert_id=input_data.get("alert_id"),
+            alert_type=input_data.get("alert_type"),
+            current_cpu=input_data.get("current_cpu"),
+            current_ram=input_data.get("current_ram"),
+            raw_logs=input_data.get("raw_logs", ""),
+            decision=decision,
+            full_result={
+                "log_analysis": log_analysis,
+                "metrics_analysis": metrics_analysis,
+                "decision": decision,
+                "action_plan": action_plan,
+            },
+        )
+
+        # ── Build final result ────────────────────────────────────────────
+        return {
+            "incident_id": incident_id,
+            "pipeline_version": self.PIPELINE_VERSION,
+            "agents_completed": agents_completed,
+            "log_analysis": log_analysis,
+            "metrics_analysis": metrics_analysis,
+            "decision": decision,
+            "action_plan": action_plan,
+            "summary": {
+                "root_cause": decision.get("root_cause", ""),
+                "severity": decision.get("severity", "UNKNOWN"),
+                "recommended_action": decision.get("recommended_action", ""),
+                "requires_approval": action_plan.get("requires_approval", True),
+                "confidence": decision.get("confidence", 0.0),
+            },
+            "processing_time_ms": elapsed,
+        }
+
+    # ── DB persistence ────────────────────────────────────────────────────
+
+    async def _save_incident(
+        self,
+        user_id: str,
+        service_name: str,
+        alert_id: str | None,
+        alert_type: str | None,
+        current_cpu: float | None,
+        current_ram: float | None,
+        raw_logs: str,
+        decision: dict,
+        full_result: dict,
+    ) -> str:
+        """Save the pipeline result as an Incident row.  Returns the incident UUID string."""
+        try:
+            async with AsyncSessionLocal() as session:
+                incident = Incident(
+                    user_id=uuid.UUID(user_id) if user_id else uuid.uuid4(),
+                    service_name=service_name,
+                    alert_id=uuid.UUID(alert_id) if alert_id else None,
+                    alert_type=alert_type,
+                    severity=decision.get("severity"),
+                    cpu_percent=current_cpu,
+                    ram_percent=current_ram,
+                    log_excerpt=raw_logs[:2000] if raw_logs else None,
+                    root_cause=decision.get("root_cause"),
+                    simple_explanation=decision.get("simple_explanation"),
+                    fix_steps=decision.get("fix_steps"),
+                    resolution=None,
+                    status="open",
+                    confidence=decision.get("confidence"),
+                    ai_response=full_result,
+                )
+                session.add(incident)
+                await session.commit()
+                await session.refresh(incident)
+                logger.info("Incident %s saved to DB (multi-agent pipeline).", incident.id)
+                return str(incident.id)
+        except Exception as exc:
+            logger.error("Failed to save incident: %s", exc, exc_info=True)
+            return str(uuid.uuid4())  # return a placeholder UUID so response can still be returned
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:00  cat services/ai-engine/src/agents/log_analyzer_agent.py
+"""
+src/agents/log_analyzer_agent.py — Agent 1: Log Analyzer.
+
+Pure Python pattern-matching — NO LLM calls.
+Scans raw log text for error keywords, detects common failure patterns
+(connection, memory, timeout, crash), computes error rate, and returns
+a structured analysis dict.
+"""
+
+import re
+import logging
+from src.agents.base_agent import BaseAgent
+
+logger = logging.getLogger(__name__)
+
+# Keywords to count (case-insensitive search)
+_ERROR_KEYWORDS = ["ERROR", "FATAL", "Exception", "Timeout", "refused", "exhausted", "killed", "OOM"]
+_WARN_KEYWORDS = ["WARN", "WARNING"]
+
+# Named patterns and their associated regex (all case-insensitive)
+_PATTERNS: dict[str, list[str]] = {
+    "connection_pool": [
+        r"connection\s+refused",
+        r"pool\s+exhausted",
+        r"too\s+many\s+connections",
+    ],
+    "memory": [
+        r"\bOOM\b",
+        r"out\s+of\s+memory",
+        r"\bkilled\b",
+    ],
+    "timeout": [
+        r"timed?\s*out",
+        r"deadline\s+exceeded",
+        r"\btimeout\b",
+    ],
+    "crash": [
+        r"segfault",
+        r"\bpanic\b",
+        r"fatal\s+error",
+    ],
+}
+
+# Pre-compile for speed
+_COMPILED_PATTERNS: dict[str, list[re.Pattern]] = {
+    name: [re.compile(p, re.IGNORECASE) for p in regexes]
+    for name, regexes in _PATTERNS.items()
+}
+
+# Regex to detect common log timestamp formats:
+#   2024-04-19T12:34:56  |  2024-04-19 12:34:56  |  Apr 19 12:34:56
+_TIMESTAMP_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}"
+    r"|[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}"
+)
+
+
+class LogAnalyzerAgent(BaseAgent):
+    """Agent 1 — analyses raw log text with regex, no LLM."""
+
+    agent_name = "LogAnalyzerAgent"
+
+    async def run(self, input_data: dict) -> dict:
+        raw_logs: str = input_data.get("raw_logs", "")
+
+        # Edge case: empty / whitespace-only logs → fallback
+        if not raw_logs or not raw_logs.strip():
+            logger.warning("LogAnalyzerAgent received empty logs — using fallback.")
+            return self._fallback()
+
+        lines = raw_logs.strip().splitlines()
+        total_lines = len(lines)
+
+        # ── Keyword counts ────────────────────────────────────────────────
+        error_count = self._count_keywords(raw_logs, _ERROR_KEYWORDS)
+        warn_count = self._count_keywords(raw_logs, _WARN_KEYWORDS)
+
+        # ── Error lines & error rate ──────────────────────────────────────
+        error_lines: list[str] = []
+        for idx, line in enumerate(lines, 1):
+            upper = line.upper()
+            if any(kw.upper() in upper for kw in _ERROR_KEYWORDS):
+                error_lines.append(f"{line.strip()} (line {idx})")
+        error_rate = round(len(error_lines) / total_lines, 2) if total_lines else 0.0
+
+        # ── Pattern detection ─────────────────────────────────────────────
+        detected_patterns: list[str] = []
+        for name, compiled_list in _COMPILED_PATTERNS.items():
+            for pat in compiled_list:
+                if pat.search(raw_logs):
+                    detected_patterns.append(name)
+                    break  # one match per pattern category is enough
+
+        primary_error_type = detected_patterns[0] if detected_patterns else "unknown"
+
+        # ── Sample errors (max 5) ─────────────────────────────────────────
+        sample_errors = error_lines[:5]
+
+        # ── First timestamp ───────────────────────────────────────────────
+        ts_match = _TIMESTAMP_RE.search(raw_logs)
+        first_timestamp = ts_match.group(0) if ts_match else None
+
+        # ── Severity classification ───────────────────────────────────────
+        if error_rate >= 0.6 or error_count >= 50 or "crash" in detected_patterns:
+            severity = "CRITICAL"
+        elif error_rate >= 0.3 or error_count >= 20:
+            severity = "HIGH"
+        elif error_rate >= 0.1 or error_count >= 5:
+            severity = "MEDIUM"
+        else:
+            severity = "LOW"
+
+        return {
+            "error_count": error_count,
+            "warn_count": warn_count,
+            "error_rate": error_rate,
+            "detected_patterns": detected_patterns,
+            "primary_error_type": primary_error_type,
+            "sample_errors": sample_errors,
+            "log_severity": severity,
+            "first_timestamp": first_timestamp,
+            "total_lines": total_lines,
+            "analysis_method": "pattern_matching",
+        }
+
+    # ── Helpers ───────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _count_keywords(text: str, keywords: list[str]) -> int:
+        """Count how many times any of the keywords appear (case-insensitive)."""
+        upper = text.upper()
+        return sum(upper.count(kw.upper()) for kw in keywords)
+
+    @staticmethod
+    def _fallback() -> dict:
+        """Return a safe default when logs are empty or unreadable."""
+        return {
+            "error_count": 0,
+            "warn_count": 0,
+            "error_rate": 0.0,
+            "detected_patterns": [],
+            "primary_error_type": "unknown",
+            "sample_errors": [],
+            "log_severity": "UNKNOWN",
+            "first_timestamp": None,
+            "total_lines": 0,
+            "analysis_method": "pattern_matching",
+            "fallback": True,
+        }
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:00 
+
+
+
+
+# 5. AWS collector
+cat services/metrics-service/src/collectors/aws_collector.py
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:01  cat services/metrics-service/src/collectors/aws_collector.py
+import logging
+from datetime import datetime, timedelta
+import boto3
+
+from src.config import settings
+
+logger = logging.getLogger(__name__)
+
+def get_boto_session():
+    """Create a Boto3 session using config credentials."""
+    return boto3.Session(
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key,
+        region_name=settings.aws_default_region,
+    )
+
+def collect() -> list[dict]:
+    """
+    Collects CPU metrics from all running AWS EC2 instances using CloudWatch.
+    Returns a list of raw dicts that the normalizer will convert to NormalizedMetric.
+    Since AWS doesn't expose host RAM/Disk easily without the CloudWatch Agent,
+    we will simulate RAM/Disk as standard safe values or derive them if available.
+    """
+    if not settings.aws_access_key_id or not settings.aws_secret_access_key:
+        logger.warning("AWS credentials missing. Cannot collect from EC2.")
+        return []
+
+    try:
+        session = get_boto_session()
+        ec2 = session.client('ec2')
+        cw = session.client('cloudwatch')
+
+        # 1. Fetch running instances
+        response = ec2.describe_instances(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]
+        )
+
+        instances = []
+        for reservation in response.get('Reservations', []):
+            for inst in reservation.get('Instances', []):
+                instances.append({
+                    'id': inst['InstanceId'],
+                    'type': inst.get('InstanceType', 'unknown')
+                })
+
+        if not instances:
+            logger.info("No running EC2 instances found.")
+            return []
+
+        # 2. Fetch Latest Metrics using CloudWatch
+        results = []
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(minutes=10) # 10 minute buffer
+
+        for inst in instances:
+            instance_id = inst['id']
+            # Fetch CPU Utilization
+            cpu_resp = cw.get_metric_statistics(
+                Namespace='AWS/EC2',
+                MetricName='CPUUtilization',
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance_id}],
+                StartTime=start_time,
+                EndTime=end_time,
+                Period=300, # 5 min
+                Statistics=['Average']
+            )
+
+            # Extract latest datapoint
+            datapoints = cpu_resp.get('Datapoints', [])
+            if datapoints:
+                # Sort descending by timestamp
+                datapoints.sort(key=lambda x: x['Timestamp'], reverse=True)
+                cpu_avg = datapoints[0]['Average']
+            else:
+                # Cloudwatch can delay 5+ mins for new instances
+                cpu_avg = 1.0
+
+            # Mock RAM and Disk since basic Cloudwatch doesn't track OS-level RAM
+            ram_percent = 40.0
+            disk_percent = 25.0
+
+            results.append({
+                "user_id": settings.default_user_id,
+                "service_name": f"aws-ec2-{instance_id}",
+                "cpu_percent": round(cpu_avg, 2),
+                "ram_percent": ram_percent,
+                "disk_percent": disk_percent,
+                "source": "aws_cloudwatch",
+                "region": settings.aws_default_region,
+                "timestamp": datetime.utcnow(),
+            })
+
+        return results
+
+    except Exception as exc:
+        logger.error(f"Failed to collect AWS metrics: {exc}")
+        return []
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:01 
+
+
+
+# 6. Dashboard main page
+cat frontend/src/pages/Dashboard.jsx
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:02  cat frontend/src/pages/Dashboard.jsx
+import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { getAlerts } from '../api/alerts'
+import useStore from '../store/useStore'
+import LiveEventStream from '../components/dashboard/LiveEventStream'
+
+export default function Dashboard() {
+  const setAlertCounts = useStore((s) => s.setAlertCounts)
+  
+  // Real fetch to keep background syncing / alert counting working
+  const { data: alertsData } = useQuery({
+    queryKey: ['alertsForStats'],
+    queryFn: async () => {
+      const res = await getAlerts()
+      const alerts = res.data?.alerts || res.data || []
+      const open = alerts.filter((a) => a.status !== 'resolved').length
+      const critical = alerts.filter((a) => (a.severity || '').toLowerCase() === 'critical' && a.status !== 'resolved').length
+      setAlertCounts(open, critical)
+      return { alerts, open, critical }
+    },
+    refetchInterval: 15_000,
+  })
+
+  // Static mock data for UI exactly matching the screenshot
+  const mockAlerts = [
+    { severity: 'Critical', resource: 'db-prod-eu-central-1', issue: 'Connection pool exhaustion detected.', age: '2m ago' },
+    { severity: 'Warning', resource: 's3-assets-public', issue: 'S3 Bucket Public Access Warning', age: '15m ago', hasAi: true },
+    { severity: 'Info', resource: 'eks-cluster-us-west', issue: 'Node autoscaling initiated (Scale Up).', age: '1h ago' },
+  ]
+
+  return (
+    <div className="max-w-[1200px] mx-auto">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-[#0f172a]">Dashboard</h1>
+        <button className="flex items-center gap-2 border border-[#e2e8f0] rounded px-4 py-2 text-[13px] font-medium text-[#475569] hover:bg-[#f8fafc] shadow-sm">
+          <DownloadIcon /> Export Report
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* AI System Summary */}
+          <div className="bg-[#f8fafc] rounded-lg border border-[#e2e8f0] overflow-hidden shadow-sm">
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <SparklesBlueIcon />
+                  <h2 className="text-lg font-bold text-[#0f172a]">AI System Summary</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 border border-[#16a34a] text-[#16a34a] text-[11px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wide bg-white">
+                    <span className="w-1.5 h-1.5 bg-[#16a34a] rounded-full"></span> Healthy
+                  </span>
+                  <span className="border border-[#cbd5e1] text-[#475569] text-[11px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wide bg-white">
+                    Risk: Low
+                  </span>
+                </div>
+              </div>
+              <p className="text-[14px] text-[#475569] leading-relaxed mb-8 pr-12">
+                "All systems operating within normal parameters. One minor latency spike detected in us-east-1 RDS cluster. ML models indicate 98% probability of automatic resolution via read-replica scaling."
+              </p>
+            </div>
+
+            <div className="bg-[#f1f5f9] px-5 py-3 border-t border-[#e2e8f0] flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[13px]">
+                <span className="text-[#2563eb] font-bold uppercase tracking-wider text-[11px]">Recommended Action</span>
+                <span className="text-[#0f172a] font-medium ml-2">Monitor us-east-1 RDS</span>
+              </div>
+              <div className="flex items-center gap-2 text-[13px]">
+                <span className="text-[#64748b] font-bold uppercase tracking-wider text-[11px]">Confidence</span>
+                <span className="text-[#2563eb] font-bold">98%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Alerts */}
+          <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm">
+            <div className="flex items-center justify-between p-5 border-b border-[#e2e8f0]">
+              <h2 className="text-[17px] font-bold text-[#0f172a]">Active Alerts</h2>
+              <a href="/alerts" className="text-[13px] font-medium text-[#2563eb] hover:underline">View All</a>
+            </div>
+            <div className="p-0">
+              <table className="w-full text-left text-[13px]">
+                <thead>
+                  <tr className="border-b border-[#e2e8f0]">
+                    <th className="py-3 px-5 text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-mono">Severity</th>
+                    <th className="py-3 px-5 text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-mono">Resource</th>
+                    <th className="py-3 px-5 text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-mono">Issue</th>
+                    <th className="py-3 px-5 text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-mono text-right">Age</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mockAlerts.map((alert, i) => (
+                    <tr key={i} className="border-b border-[#e2e8f0] last:border-0 hover:bg-[#f8fafc]">
+                      <td className="py-4 px-5">
+                        <span className={`flex items-center gap-2 font-medium ${alert.severity === 'Critical' ? 'text-[#ef4444]' : alert.severity === 'Warning' ? 'text-[#f59e0b]' : 'text-[#3b82f6]'}`}>
+                          <span className={`w-2 h-2 rounded-full ${alert.severity === 'Critical' ? 'bg-[#ef4444]' : alert.severity === 'Warning' ? 'bg-[#f59e0b]' : 'bg-[#3b82f6]'}`}></span>
+                          {alert.severity}
+                        </span>
+                      </td>
+                      <td className="py-4 px-5 text-[#475569]">{alert.resource}</td>
+                      <td className="py-4 px-5 text-[#0f172a] font-medium flex items-center gap-2">
+                        {alert.hasAi && <SparklesSmallIcon />}
+                        {alert.issue}
+                      </td>
+                      <td className="py-4 px-5 text-[#64748b] text-right">{alert.age}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Live Event Stream (Modified from component) */}
+          <div className="rounded-lg overflow-hidden border border-[#1e293b] shadow-xl">
+            <LiveEventStream />
+          </div>
+
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+
+          {/* Global Metrics Cards */}
+          <div className="bg-white rounded-lg border border-[#e2e8f0] p-5 shadow-sm space-y-6">
+            <MetricBar label="GLOBAL CPU" value="42%" color="bg-[#3b82f6]" blocks={10} filled={4} />
+            <div className="border-t border-[#e2e8f0]"></div>
+            <MetricBar label="GLOBAL MEMORY" value="68%" color="bg-[#dbeafe]" blocks={10} filled={7} />
+            <div className="border-t border-[#e2e8f0]"></div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#0f172a] tracking-wider uppercase font-mono">NETWORK I/O</span>
+                <span className="text-[13px] font-bold text-[#0f172a]">1.2 TB/s</span>
+              </div>
+              <div className="flex gap-1 h-6 items-end">
+                <div className="w-full bg-[#dbeafe] h-2"></div>
+                <div className="w-full bg-[#dbeafe] h-2"></div>
+                <div className="w-full bg-[#dbeafe] h-2"></div>
+                <div className="w-full bg-[#fca5a5] h-6 relative">
+                  <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-[#ef4444] rounded-full border border-white"></span>
+                </div>
+                <div className="w-full bg-[#dbeafe] h-2"></div>
+                <div className="w-full bg-[#dbeafe] h-2"></div>
+                <div className="w-full bg-[#dbeafe] h-2"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Action Timeline */}
+          <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm">
+            <div className="flex items-center gap-2 p-5 border-b border-[#e2e8f0]">
+              <HistoryClockIcon />
+              <h2 className="text-[17px] font-bold text-[#0f172a]">AI Action Timeline</h2>
+            </div>
+            <div className="p-5">
+              <div className="relative border-l-2 border-[#e2e8f0] ml-3 space-y-8 pb-4">
+
+                <div className="relative pl-6">
+                  <span className="absolute -left-[9px] top-1 w-4 h-4 bg-[#2563eb] rounded-full border-4 border-white"></span>
+                  <h3 className="text-[14px] font-bold text-[#0f172a]">Scaled RDS Replica</h3>
+                  <p className="text-[13px] text-[#475569] mt-1 mb-1">Automated response to latency spike in us-east-1.</p>
+                  <span className="text-[11px] text-[#94a3b8]">Just now</span>
+                </div>
+
+                <div className="relative pl-6">
+                  <span className="absolute -left-[9px] top-1 w-4 h-4 bg-white rounded-full border-2 border-[#cbd5e1]"></span>
+                  <h3 className="text-[14px] font-bold text-[#0f172a]">Suggested IAM Policy Update</h3>
+                  <p className="text-[13px] text-[#475569] mt-1 mb-2">Found overly permissive policy on dev-role.</p>
+                  <a href="#" className="text-[12px] font-medium text-[#2563eb] hover:underline">Review Policy</a>
+                  <p className="text-[11px] text-[#94a3b8] mt-1">45m ago</p>
+                </div>
+
+                <div className="relative pl-6">
+                  <span className="absolute -left-[9px] top-1 w-4 h-4 bg-white rounded-full border-2 border-[#cbd5e1]"></span>
+                  <h3 className="text-[14px] font-bold text-[#0f172a]">Cache Purged</h3>
+                  <p className="text-[13px] text-[#475569] mt-1 mb-1">Automated routine cleanup for redis-cluster-2.</p>
+                  <span className="text-[11px] text-[#94a3b8]">2h ago</span>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MetricBar({ label, value, color, blocks, filled }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-bold text-[#0f172a] tracking-wider uppercase font-mono">{label}</span>
+        <span className="text-[13px] font-bold text-[#0f172a]">{value}</span>
+      </div>
+      <div className="flex gap-1 h-6">
+        {Array.from({ length: blocks }).map((_, i) => (
+          <div key={i} className={`flex-1 ${i < filled ? color : 'bg-[#dbeafe] opacity-60'} ${i === filled - 1 ? 'relative' : ''}`}>
+             {i === filled - 1 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#2563eb] rounded-full border border-white"></span>}       
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+  )
+}
+
+function SparklesBlueIcon() {
+  return (
+    <svg className="w-5 h-5 text-[#2563eb]" fill="currentColor" viewBox="0 0 24 24"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>        
+  )
+}
+
+function SparklesSmallIcon() {
+  return (
+    <svg className="w-4 h-4 text-[#2563eb]" fill="currentColor" viewBox="0 0 24 24"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" /></svg>
+  )
+}
+
+function HistoryClockIcon() {
+  return (
+    <svg className="w-5 h-5 text-[#0f172a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+  )
+}
+
+
+
+
+# 7. Docker compose
+cat infra/docker-compose.yml
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:02  cat infra/docker-compose.yml
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpassword123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - copilot-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── KAFKA STACK ────────────────────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    container_name: zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - copilot-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      # Expose 9092 inside the Docker network, and 29092 to the host machine
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - copilot-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - copilot-net
+    # Creates the metrics-stream topic and then exits
+    command: >
+      bash -c "
+      echo 'Waiting for Kafka to be ready...' &&
+      cub kafka-ready -b kafka:9092 1 20 &&
+      kafka-topics --create --topic metrics-stream --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
+      echo 'Topic created successfully.'
+      "
+
+  # ── APP SERVICES ───────────────────────────────────────────────────────────
+  auth-service:
+    build: ../services/auth-service
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: authdb
+      DB_USER: authuser
+      DB_PASSWORD: authpassword123
+      JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - copilot-net
+
+  metrics-service:
+    build: ../services/metrics-service
+    container_name: metrics-service
+    restart: unless-stopped
+    env_file:
+      - ../services/metrics-service/.env
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: 8001
+      DATABASE_URL: postgresql+asyncpg://authuser:authpassword123@postgres:5432/metricsdb
+      AUTH_SERVICE_URL: http://auth-service:3001
+      DEFAULT_USER_ID: 00000000-0000-0000-0000-000000000001
+      COLLECTION_INTERVAL_SECONDS: 60
+      ENVIRONMENT: development
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    networks:
+      - copilot-net
+
+  alert-service:
+    build: ../services/alert-service
+    container_name: alert-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: authdb
+      DB_USER: authuser
+      DB_PASSWORD: authpassword123
+      JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
+      KAFKA_BROKER: kafka:9092
+      KAFKA_GROUP_ID: alert-service-group
+      AUTH_SERVICE_URL: http://auth-service:3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      metrics-service:
+        condition: service_started
+    networks:
+      - copilot-net
+
+  ai-engine:
+    build: ../services/ai-engine
+    container_name: ai-engine
+    restart: unless-stopped
+    env_file:
+      - ../services/ai-engine/.env
+    ports:
+      - "8002:8002"
+    environment:
+      PORT: 8002
+      DATABASE_URL: postgresql+asyncpg://authuser:authpassword123@postgres:5432/authdb
+      PINECONE_INDEX_NAME: devops-incidents
+      METRICS_SERVICE_URL: http://metrics-service:8001
+      ALERT_SERVICE_URL: http://alert-service:3003
+      AUTH_SERVICE_URL: http://auth-service:3001
+      JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
+      EMBEDDING_MODEL: all-MiniLM-L6-v2
+    volumes:
+      - ../model-cache:/root/.cache/huggingface
+    depends_on:
+      postgres:
+        condition: service_healthy
+      metrics-service:
+        condition: service_started
+      alert-service:
+        condition: service_started
+    networks:
+      - copilot-net
+
+  # ── ACTION SERVICE (Phase 6) ──────────────────────────────────────────────
+  action-service:
+    build: ../services/action-service
+    container_name: action-service
+    restart: unless-stopped
+    env_file:
+      - ../services/action-service/.env
+    ports:
+      - "8003:8003"
+    environment:
+      PORT: 8003
+      DATABASE_URL: postgresql+asyncpg://authuser:authpassword123@postgres:5432/actionsdb
+      AUTH_SERVICE_URL: http://auth-service:3001
+      AI_ENGINE_URL: http://ai-engine:8002
+      DRY_RUN: "true"
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      # Linux / Mac — mount Docker socket for container control
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Windows (Docker Desktop) — uncomment the line below, comment out the line above
+      # - //./pipe/docker_engine://./pipe/docker_engine
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      ai-engine:
+        condition: service_started
+    networks:
+      - copilot-net
+
+  # ── FRONTEND (Phase 7) ───────────────────────────────────────────────────
+  frontend:
+    build: ../frontend
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      auth-service:
+        condition: service_started
+      metrics-service:
+        condition: service_started
+      alert-service:
+        condition: service_started
+      ai-engine:
+        condition: service_started
+      action-service:
+        condition: service_started
+    networks:
+      - copilot-net
+
+volumes:
+  pgdata:
+
+networks:
+  copilot-net:
+    driver: bridge
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:02 
+
+
+
+
+# 8. Current container status
+docker compose ps
+docker compose logs --tail 5 metrics-service
+docker compose logs --tail 5 ai-engine
+docker compose logs --tail 5 frontend
+
+
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:03  docker compose ps
+no configuration file provided: not found
+
+rahul  …\ai-devops-copilot   main ✘!?  ♥ 10:03  cd .\infra\
+
+rahul  …\ai-devops-copilot\infra   main ✘!?  ♥ 10:03  docker compose ps
+NAME              IMAGE                             COMMAND                  SERVICE           CREATED        STATUS                   PORTS
+action-service    infra-action-service              "uvicorn src.main:ap…"   action-service    18 hours ago   Up 8 minutes             0.0.0.0:8003->8003/tcp, [::]:8003->8003/tcp
+ai-engine         infra-ai-engine                   "uvicorn src.main:ap…"   ai-engine         18 hours ago   Up 8 minutes             0.0.0.0:8002->8002/tcp, [::]:8002->8002/tcp
+alert-service     infra-alert-service               "docker-entrypoint.s…"   alert-service     18 hours ago   Up 8 minutes             0.0.0.0:3003->3003/tcp, [::]:3003->3003/tcp
+auth-service      infra-auth-service                "docker-entrypoint.s…"   auth-service      18 hours ago   Up 9 minutes             0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+frontend          infra-frontend                    "/docker-entrypoint.…"   frontend          18 hours ago   Up 8 minutes             0.0.0.0:5173->80/tcp, [::]:5173->80/tcp
+kafka             confluentinc/cp-kafka:7.5.3       "/etc/confluent/dock…"   kafka             2 days ago     Up 9 minutes (healthy)   0.0.0.0:9092->9092/tcp, [::]:9092->9092/tcp, 0.0.0.0:29092->29092/tcp, [::]:29092->29092/tcp
+metrics-service   infra-metrics-service             "uvicorn src.main:ap…"   metrics-service   18 hours ago   Up 8 minutes             0.0.0.0:8001->8001/tcp, [::]:8001->8001/tcp
+postgres          postgres:16-alpine                "docker-entrypoint.s…"   postgres          2 days ago     Up 9 minutes (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+zookeeper         confluentinc/cp-zookeeper:7.5.3   "/etc/confluent/dock…"   zookeeper         2 days ago     Up 9 minutes (healthy)   2181/tcp, 2888/tcp, 3888/tcp
+
+
+
+
+rahul  …\ai-devops-copilot\infra   main ✘!?  ♥ 10:04  docker compose logs --tail 5 metrics-service
+metrics-service  | 2026-04-23 04:33:12,478 [INFO] src.collectors.aws_collector — No running EC2 instances found.
+metrics-service  | 2026-04-23 04:33:12,481 [INFO] apscheduler.executors.default — Job "_collect_and_save (trigger: interval[0:01:00], next run at: 2026-04-23 04:34:08 UTC)" executed successfully
+metrics-service  | 2026-04-23 04:34:08,069 [INFO] apscheduler.executors.default — Running job "_collect_and_save (trigger: interval[0:01:00], next run at: 2026-04-23 04:35:08 UTC)" (scheduled at 2026-04-23 04:34:08.068668+00:00)
+metrics-service  | 2026-04-23 04:34:09,365 [INFO] src.collectors.aws_collector — No running EC2 instances found.
+metrics-service  | 2026-04-23 04:34:09,371 [INFO] apscheduler.executors.default — Job "_collect_and_save (trigger: interval[0:01:00], next run at: 2026-04-23 04:35:08 UTC)" executed successfully
+
+rahul  …\ai-devops-copilot\infra   main ✘!?  ♥ 10:04  docker compose logs --tail 5 ai-engine
+ai-engine  | 2026-04-23 04:25:11,553 [INFO] src.database — Database tables created / verified.
+ai-engine  | 2026-04-23 04:25:14,111 [INFO] src.rag.vector_store — Pinecone index 'devops-incidents' ready.
+ai-engine  | 2026-04-23 04:25:14,167 [INFO] src.main — AI Engine ready — port 8002
+ai-engine  | INFO:     Application startup complete.
+ai-engine  | INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+
+rahul  …\ai-devops-copilot\infra   main ✘!?  ♥ 10:04  docker compose logs --tail 5 frontend
+frontend  | 2026/04/23 04:25:04 [notice] 1#1: start worker process 41
+frontend  | 2026/04/23 04:25:04 [notice] 1#1: start worker process 42
+frontend  | 2026/04/23 04:25:04 [notice] 1#1: start worker process 43
+frontend  | 2026/04/23 04:25:04 [notice] 1#1: start worker process 44
+frontend  | 2026/04/23 04:25:04 [notice] 1#1: start worker process 45
+
+rahul  …\ai-devops-copilot\infra   main ✘!?  ♥ 10:05 

@@ -3,7 +3,7 @@ import requests
 import psycopg2
 
 print("============================================================")
-print("  VERIFYING BUG FIXES FOR AI DEVOPS COPILOT")
+print("  VERIFYING BUG FIXES FOR SENTINEL AI")
 print("============================================================")
 
 results = {}

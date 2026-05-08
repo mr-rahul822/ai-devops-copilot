@@ -13,7 +13,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
     networks:
-      - copilot-net
+      - sentinel-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
       interval: 5s
@@ -29,7 +29,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     networks:
-      - copilot-net
+      - sentinel-net
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "2181"]
       interval: 10s
@@ -55,7 +55,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     networks:
-      - copilot-net
+      - sentinel-net
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "9092"]
       interval: 10s
@@ -69,7 +69,7 @@ services:
       kafka:
         condition: service_healthy
     networks:
-      - copilot-net
+      - sentinel-net
     # Creates the metrics-stream topic and then exits
     command: >
       bash -c "
@@ -94,11 +94,12 @@ services:
       DB_USER: authuser
       DB_PASSWORD: authpassword123
       JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
+      FRONTEND_URL: "http://localhost:5173"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - copilot-net
+      - sentinel-net
 
   metrics-service:
     build: ../services/metrics-service
@@ -129,7 +130,7 @@ services:
       kafka:
         condition: service_healthy
     networks:
-      - copilot-net
+      - sentinel-net
 
   alert-service:
     build: ../services/alert-service
@@ -156,7 +157,7 @@ services:
       metrics-service:
         condition: service_started
     networks:
-      - copilot-net
+      - sentinel-net
 
   ai-engine:
     build: ../services/ai-engine
@@ -185,7 +186,7 @@ services:
       alert-service:
         condition: service_started
     networks:
-      - copilot-net
+      - sentinel-net
 
   # ── ACTION SERVICE (Phase 6) ──────────────────────────────────────────────
   action-service:
@@ -218,7 +219,7 @@ services:
       ai-engine:
         condition: service_started
     networks:
-      - copilot-net
+      - sentinel-net
 
   # ── FRONTEND (Phase 7) ───────────────────────────────────────────────────
   frontend:
@@ -239,11 +240,11 @@ services:
       action-service:
         condition: service_started
     networks:
-      - copilot-net
+      - sentinel-net
 
 volumes:
   pgdata:
 
 networks:
-  copilot-net:
+  sentinel-net:
     driver: bridge

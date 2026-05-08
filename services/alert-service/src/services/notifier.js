@@ -52,7 +52,7 @@ async function sendAlert(alert) {
     });
 
     const info = await transporter.sendMail({
-      from: '"AI DevOps Copilot" <alerts@devops-copilot.io>',
+      from: '"Sentinel AI" <alerts@sentinel-ai.io>',
       to: 'admin@example.com',
       subject: `${emoji} [${alert.severity}] ${alert.alert_type} — ${alert.service_name}`,
       text: [

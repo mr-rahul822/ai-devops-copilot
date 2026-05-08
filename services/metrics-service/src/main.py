@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title="AI DevOps Copilot — Metrics Collector",
+    title="Sentinel AI — Metrics Collector",
     description="Collects CPU/RAM/disk metrics on a schedule and exposes them via REST.",
     version="1.0.0",
     lifespan=lifespan,

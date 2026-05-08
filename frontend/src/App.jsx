@@ -9,6 +9,9 @@ import Actions from './pages/Actions'
 import Settings from './pages/Settings'
 import CloudConfiguration from './pages/CloudConfiguration'
 import AIInsights from './pages/AIInsights'
+import Profile from './pages/Profile'
+
+import LogExplorer from './pages/LogExplorer'
 
 function ProtectedRoute({ children }) {
   const token = useStore((s) => s.token)
@@ -31,7 +34,7 @@ export default function App() {
         <Route path="/clusters" element={<Dashboard />} />
         <Route path="/metrics" element={<Dashboard />} />
         <Route path="/alerts" element={<Alerts />} />
-        <Route path="/logs" element={<Dashboard />} />
+        <Route path="/logs" element={<LogExplorer />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/actions" element={<Actions />} />
         <Route path="/settings" element={<Settings />} />
@@ -39,6 +42,7 @@ export default function App() {
         <Route path="/cost" element={<Dashboard />} />
         <Route path="/cloud-configuration" element={<CloudConfiguration />} />
         <Route path="/insights" element={<AIInsights />} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

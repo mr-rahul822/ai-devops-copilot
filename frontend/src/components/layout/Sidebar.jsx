@@ -28,15 +28,10 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-6 pb-6 border-b border-[#1f2937]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#2563eb] flex items-center justify-center shrink-0">
-            {/* Simple 'C' icon to represent Copilot */}
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c2.31 0 4.43-.79 6.12-2.11l-2.06-2.5A6.974 6.974 0 0 1 12 19c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.55 0 2.97.51 4.12 1.37l2.17-2.31C16.54 2.8 14.38 2 12 2z"/>
-            </svg>
-          </div>
+          <img src="/logo.png" alt="CloudyBro" className="w-8 h-8 shrink-0" />
           <div>
-            <h1 className="text-white font-bold text-[15px] tracking-tight leading-tight">AI DevOps Copilot</h1>
-            <p className="text-[#94a3b8] text-[11px] font-medium tracking-wide">Enterprise Control Plane</p>
+            <h1 className="text-white font-bold text-[15px] tracking-tight leading-tight">CLOUDY<span className="text-[#3b82f6]">BRO</span></h1>
+            <p className="text-[#94a3b8] text-[11px] font-medium tracking-wide">Your 24/7 DevOps Guardian</p>
           </div>
         </div>
       </div>
@@ -63,6 +58,15 @@ export default function Sidebar() {
 
       {/* Bottom links */}
       <div className="px-3 pb-5 pt-4 border-t border-[#1f2937] space-y-1">
+        <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 text-[#94a3b8] hover:text-white text-[13px] font-medium rounded-md transition-colors ${isActive ? 'text-white bg-[#1e293b]' : ''}`
+            }
+          >
+            <svg className="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+            Profile
+        </NavLink>
         <NavLink
             to="/settings"
             className={({ isActive }) =>

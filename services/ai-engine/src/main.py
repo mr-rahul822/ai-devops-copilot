@@ -85,7 +85,7 @@ async def lifespan(app: FastAPI):
 # ── App ──────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="AI DevOps Copilot — AI Engine",
+    title="Sentinel AI — AI Engine",
     description="LLM-powered diagnosis, RAG, and chat for cloud infrastructure",
     version="1.0.0",
     lifespan=lifespan,

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 const clouds = [
-  { id: 'aws', name: 'Amazon Web Services', label: 'IAM Role ARN', placeholder: 'arn:aws:iam::123456789:role/DevOpsCopilot' },
+  { id: 'aws', name: 'Amazon Web Services', label: 'IAM Role ARN', placeholder: 'arn:aws:iam::123456789:role/CloudyBro' },
   { id: 'azure', name: 'Microsoft Azure', label: 'Service Principal ID', placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
   { id: 'gcp', name: 'Google Cloud Platform', label: 'Service Account JSON', placeholder: 'Paste service account JSON...' },
 ]

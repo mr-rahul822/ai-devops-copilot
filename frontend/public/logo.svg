@@ -9,13 +9,20 @@
       <stop offset="100%" stop-color="#60a5fa"/>
     </linearGradient>
   </defs>
+  <!-- Background circle -->
   <circle cx="20" cy="20" r="19" fill="#0a0a0a" stroke="#1e293b" stroke-width="0.5"/>
+  <!-- Hood outline -->
   <path d="M20 4 C13 4 9 10 9 16 L9 18 C9 18 12 19 20 19 C28 19 31 18 31 18 L31 16 C31 10 27 4 20 4Z"
         fill="url(#hoodGrad)" stroke="#e2e8f0" stroke-width="0.8" stroke-linejoin="round"/>
+  <!-- Hood visor -->
   <ellipse cx="20" cy="17" rx="8" ry="3" fill="none" stroke="#e2e8f0" stroke-width="0.7"/>
+  <!-- Laptop body -->
   <rect x="11" y="20" width="18" height="11" rx="1.5" fill="#0f172a" stroke="#e2e8f0" stroke-width="0.7"/>
+  <!-- Code symbol </> on laptop screen -->
   <text x="20" y="28" font-family="monospace" font-size="7" fill="url(#codeGlow)" text-anchor="middle" font-weight="bold">&lt;/&gt;</text>
+  <!-- Laptop base -->
   <line x1="8" y1="32" x2="32" y2="32" stroke="#e2e8f0" stroke-width="0.8" stroke-linecap="round"/>
+  <!-- Arms/shoulders -->
   <path d="M11 22 L7 28" fill="none" stroke="#e2e8f0" stroke-width="0.6" stroke-linecap="round"/>
   <path d="M29 22 L33 28" fill="none" stroke="#e2e8f0" stroke-width="0.6" stroke-linecap="round"/>
 </svg>

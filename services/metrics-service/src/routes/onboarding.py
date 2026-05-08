@@ -105,7 +105,7 @@ def _make_session(access_key: str, secret_key: str, region: str):
 
 CW_AGENT_CONFIG = json.dumps({
     "metrics": {
-        "namespace": "DevOpsCopilot",
+        "namespace": "SentinelAI",
         "append_dimensions": {"InstanceId": "${aws:InstanceId}"},
         "metrics_collected": {
             "cpu": {
@@ -243,7 +243,7 @@ async def connect_cloud(
     # ── STEP D: Check CloudWatch Agent status per instance ──────────────
     if instances_info:
         try:
-            agent_metrics = cw.list_metrics(Namespace="DevOpsCopilot")
+            agent_metrics = cw.list_metrics(Namespace="SentinelAI")
             agent_instance_ids = set()
             for m in agent_metrics.get("Metrics", []):
                 for dim in m.get("Dimensions", []):
@@ -289,7 +289,7 @@ async def connect_cloud(
                             "name": ["AmazonCloudWatchAgent"],
                         },
                         TimeoutSeconds=120,
-                        Comment="DevOpsCopilot: Install CloudWatch Agent",
+                        Comment="SentinelAI: Install CloudWatch Agent",
                     )
 
                     # Configure and start the agent
@@ -304,7 +304,7 @@ async def connect_cloud(
                             "optionalRestart": ["yes"],
                         },
                         TimeoutSeconds=120,
-                        Comment="DevOpsCopilot: Configure CloudWatch Agent",
+                        Comment="SentinelAI: Configure CloudWatch Agent",
                     )
 
                     inst["agent_install_note"] = "CloudWatch Agent installation started. Metrics will appear in 2-3 minutes."
@@ -536,7 +536,7 @@ async def get_instances(
         # Check which instances have agent
         agent_ids = set()
         try:
-            agent_resp = cw.list_metrics(Namespace="DevOpsCopilot")
+            agent_resp = cw.list_metrics(Namespace="SentinelAI")
             for m in agent_resp.get("Metrics", []):
                 for dim in m.get("Dimensions", []):
                     if dim["Name"] == "InstanceId":

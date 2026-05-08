@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { logoutUser } from '../api/auth'
 
 const useStore = create((set) => ({
   // Auth
@@ -13,7 +14,12 @@ const useStore = create((set) => ({
     }
     set({ token })
   },
-  logout: () => {
+  logout: async () => {
+    try {
+      await logoutUser()
+    } catch (e) {
+      // Server may be unreachable, still clear local state
+    }
     localStorage.removeItem('copilot_token')
     set({ user: null, token: null, openAlertCount: 0, criticalAlertCount: 0 })
   },

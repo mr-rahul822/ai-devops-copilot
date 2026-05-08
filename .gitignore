@@ -91,3 +91,7 @@ frontend/.cache/
 model-cache/
 *.bin
 *.safetensors
+
+# Open .gitignore in project root and add:
+infra/.env
+services/**/.env
