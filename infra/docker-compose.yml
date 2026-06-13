@@ -168,7 +168,7 @@ services:
       ALERT_SERVICE_URL: http://alert-service:3003
       AUTH_SERVICE_URL: http://auth-service:3001
       JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
-      EMBEDDING_MODEL: all-MiniLM-L6-v2
+      EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
     volumes:
       - ../model-cache:/root/.cache/huggingface
     depends_on:

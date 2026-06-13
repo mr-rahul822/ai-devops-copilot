@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     alert_service_url: str = "http://alert-service:3003"
     auth_service_url: str = "http://auth-service:3001"
     jwt_secret: str = ""
-    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     class Config:
         env_file = ".env"

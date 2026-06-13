@@ -1,150 +1,545 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from 'recharts'
+import { analyzeIncident, chatWithAI } from '../api/ai'
+import { getMetricsHistory, getLatestMetrics, getServices } from '../api/metrics'
+import { getAlerts } from '../api/alerts'
+import ChatWindow from '../components/chat/ChatWindow'
+import ChatInput from '../components/chat/ChatInput'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+import { format } from 'date-fns'
+
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001'
+
+const SEVERITY_STYLES = {
+  CRITICAL: 'bg-[#fef2f2] text-[#ef4444] border-[#ef4444]/20',
+  HIGH:     'bg-[#fff7ed] text-[#ea580c] border-[#ea580c]/20',
+  MEDIUM:   'bg-[#fefce8] text-[#ca8a04] border-[#ca8a04]/20',
+  LOW:      'bg-[#f0fdf4] text-[#16a34a] border-[#16a34a]/20',
+  UNKNOWN:  'bg-[#f8fafc] text-[#64748b] border-[#64748b]/20',
+}
+
+const RISK_STYLES = {
+  critical: 'bg-[#fef2f2] text-[#ef4444] border-[#ef4444]/20',
+  high:     'bg-[#fff7ed] text-[#ea580c] border-[#ea580c]/20',
+  medium:   'bg-[#fefce8] text-[#ca8a04] border-[#ca8a04]/20',
+  low:      'bg-[#f0fdf4] text-[#16a34a] border-[#16a34a]/20',
+}
 
 export default function AIInsights() {
-  const [chatInput, setChatInput] = useState('')
-  const [messages, setMessages] = useState([
-    { role: 'ai', text: 'I detected a latency spike in the database cluster. I recommend immediately scaling the read replicas.' },
-    { role: 'user', text: 'What caused the spike?' },
-    { role: 'ai', text: 'Based on the logs, a sudden influx of complex JOIN queries from the reporting service overwhelmed the connection pool.' },
-  ])
+  const navigate = useNavigate()
 
-  const handleSend = (e) => {
-    e.preventDefault()
-    if (!chatInput.trim()) return
-    setMessages([...messages, { role: 'user', text: chatInput }])
-    setChatInput('')
-    setTimeout(() => {
-      setMessages(m => [...m, { role: 'ai', text: 'I can analyze the specific queries if you provide the request IDs, or I can proceed with scaling the replicas now.' }])
-    }, 1000)
+  // ── State ──────────────────────────────────────────────────────────────
+  const [selectedService, setSelectedService] = useState('')
+  const [analysis, setAnalysis] = useState(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState('')
+  const [metricsChartData, setMetricsChartData] = useState([])
+  const [rawLogsDisplay, setRawLogsDisplay] = useState('')
+
+  // Chat state
+  const [messages, setMessages] = useState([])
+  const [thinking, setThinking] = useState(false)
+
+  // ── Fetch services list ────────────────────────────────────────────────
+  const { data: servicesData } = useQuery({
+    queryKey: ['aiInsightsServices'],
+    queryFn: async () => {
+      const res = await getServices(DEFAULT_USER_ID)
+      const list = res.data?.services || res.data || []
+      return Array.isArray(list) ? list : []
+    },
+    refetchInterval: 60_000,
+    onSuccess: (data) => {
+      if (data.length > 0 && !selectedService) {
+        setSelectedService(typeof data[0] === 'string' ? data[0] : data[0]?.service_name || data[0]?.name || '')
+      }
+    },
+  })
+
+  const services = useMemo(() => {
+    if (!servicesData) return []
+    return servicesData.map(s => typeof s === 'string' ? s : s?.service_name || s?.name || '')
+  }, [servicesData])
+
+  // Auto-select first service on load
+  useState(() => {
+    if (services.length > 0 && !selectedService) {
+      setSelectedService(services[0])
+    }
+  }, [services])
+
+  // ── Run Analysis ───────────────────────────────────────────────────────
+  const handleRunAnalysis = async () => {
+    if (!selectedService) return
+    setAnalyzing(true)
+    setAnalysisError('')
+    setAnalysis(null)
+
+    try {
+      // 1. Fetch real metrics history (last 1 hour)
+      const historyRes = await getMetricsHistory({ service_name: selectedService, hours: 1 })
+      const history = historyRes.data?.metrics || historyRes.data?.history || historyRes.data || []
+      const historyArr = Array.isArray(history) ? history : []
+
+      // 2. Fetch latest metrics for current values
+      const latestRes = await getLatestMetrics()
+      const latestList = Array.isArray(latestRes.data) ? latestRes.data : (latestRes.data?.metrics || [])
+      const latest = latestList.find(m => (m.service_name || m.service) === selectedService) || {}
+
+      // 3. Fetch recent alerts for this service
+      const alertsRes = await getAlerts({ service_name: selectedService })
+      const alerts = alertsRes.data?.alerts || alertsRes.data || []
+      const alertsArr = Array.isArray(alerts) ? alerts : []
+
+      // Build raw_logs context from real alert data
+      const raw_logs = alertsArr.length > 0
+        ? alertsArr.map(a =>
+            `[${a.created_at || ''}] ${a.severity} [${a.alert_type}] ${a.message || ''} on ${a.service_name} (value: ${a.metric_value}, threshold: ${a.threshold})`
+          ).join('\n')
+        : `[INFO] No active alerts for ${selectedService}. CPU at ${latest.cpu_percent ?? 'N/A'}%, RAM at ${latest.ram_percent ?? 'N/A'}%, Disk at ${latest.disk_percent ?? 'N/A'}%.`
+
+      setRawLogsDisplay(raw_logs)
+
+      // Build metrics_history for the analyze API
+      const metrics_history = historyArr.map(h => ({
+        cpu: h.cpu_percent ?? 0,
+        ram: h.ram_percent ?? 0,
+        timestamp: h.timestamp || null,
+      }))
+
+      // Build chart data for display
+      const chartData = historyArr.map(h => {
+        const ts = h.timestamp ? new Date(h.timestamp) : null
+        return {
+          time: ts ? format(ts, 'HH:mm') : '',
+          cpu: h.cpu_percent ?? 0,
+          ram: h.ram_percent ?? 0,
+        }
+      })
+      setMetricsChartData(chartData)
+
+      // 4. Call the multi-agent analysis pipeline
+      const result = await analyzeIncident({
+        user_id: DEFAULT_USER_ID,
+        service_name: selectedService,
+        alert_id: alertsArr[0]?.id || null,
+        alert_type: alertsArr[0]?.alert_type || 'ROUTINE_CHECK',
+        raw_logs,
+        current_cpu: latest.cpu_percent ?? 0,
+        current_ram: latest.ram_percent ?? 0,
+        metrics_history,
+      })
+
+      setAnalysis(result.data)
+    } catch (err) {
+      console.error('[AIInsights] Analysis failed:', err)
+      setAnalysisError(err?.response?.data?.detail || 'Analysis failed. Please try again.')
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
+  // ── Chat handler (real /ai/chat) ───────────────────────────────────────
+  const handleSend = async (text) => {
+    const now = format(new Date(), 'HH:mm')
+    const userMsg = { role: 'user', content: text, time: now }
+    setMessages(prev => [...prev, userMsg])
+    setThinking(true)
+
+    try {
+      const res = await chatWithAI({
+        message: text,
+        user_id: DEFAULT_USER_ID,
+        service_name: selectedService || undefined,
+        conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+      })
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: res.data.reply || res.data.response || res.data.message || JSON.stringify(res.data),
+        time: format(new Date(), 'HH:mm'),
+      }])
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: err?.response?.data?.detail || 'AI Engine is currently unavailable.',
+        time: format(new Date(), 'HH:mm'),
+      }])
+    } finally {
+      setThinking(false)
+    }
+  }
+
+  // ── Derived data from analysis ─────────────────────────────────────────
+  const decision = analysis?.decision || null
+  const actionPlan = analysis?.action_plan || null
+  const isPartial = analysis?.status === 'partial_diagnosis'
+  const severity = decision?.severity || 'UNKNOWN'
+  const severityStyle = SEVERITY_STYLES[severity] || SEVERITY_STYLES.UNKNOWN
+  const riskLevel = actionPlan?.risk_level?.toLowerCase() || ''
+  const riskStyle = RISK_STYLES[riskLevel] || RISK_STYLES.low
+
   return (
-    <div className="max-w-[1200px] mx-auto h-[calc(100vh-100px)] flex flex-col">
-      {/* Top Bar */}
+    <div className="max-w-[1400px] mx-auto h-[calc(100vh-100px)] flex flex-col">
+      {/* ── Top Bar ────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-[#0f172a]">Incident #4092: Database Latency Spike</h1>
-            <span className="bg-[#fef2f2] text-[#ef4444] border border-[#ef4444]/20 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider uppercase">Active</span>
-          </div>
-          <p className="text-[13px] text-[#64748b] mt-1">Detected 2 minutes ago in eu-central-1</p>
+          <h1 className="text-2xl font-bold text-[#0f172a]">AI Insights</h1>
+          <p className="text-[13px] text-[#64748b] mt-1">
+            AI-powered diagnosis for your connected infrastructure
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button className="bg-white border border-[#e2e8f0] text-[#475569] px-4 py-2 rounded text-[13px] font-medium hover:bg-[#f8fafc] shadow-sm">
-            Ignore
-          </button>
-          <button className="bg-[#2563eb] text-white px-4 py-2 rounded text-[13px] font-medium hover:bg-[#1d4ed8] shadow-sm flex items-center gap-2">
-            <LightningIcon /> Execute Fix
+        <div className="flex items-center gap-3">
+          <select
+            id="service-selector"
+            value={selectedService}
+            onChange={e => setSelectedService(e.target.value)}
+            className="bg-white border border-[#e2e8f0] text-[#0f172a] px-3 py-2 rounded-lg text-[13px] font-medium outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] transition-all"
+          >
+            {services.length === 0 && <option value="">Loading services...</option>}
+            {services.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <button
+            id="run-analysis-btn"
+            onClick={handleRunAnalysis}
+            disabled={analyzing || !selectedService}
+            className="bg-[#2563eb] text-white px-4 py-2 rounded-lg text-[13px] font-medium hover:bg-[#1d4ed8] shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {analyzing ? (
+              <>
+                <LoadingSpinner size="sm" className="!flex" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <SparklesBlueIcon white />
+                Run Analysis
+              </>
+            )}
           </button>
         </div>
       </div>
 
+      {/* ── Main Grid: Left (2/3) + Right Chat (1/3) ──────────────────── */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
-        {/* Left Column (Scrollable) */}
+
+        {/* ── Left Column (scrollable) ──────────────────────────────────── */}
         <div className="lg:col-span-2 overflow-y-auto pr-2 custom-scrollbar space-y-6 pb-6">
-          
-          {/* AI Diagnosis */}
-          <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-[#e2e8f0] flex items-center justify-between bg-[#f8fafc]">
-              <h2 className="text-[15px] font-bold text-[#0f172a] flex items-center gap-2">
-                <SparklesBlueIcon /> AI Diagnosis
-              </h2>
-              <span className="bg-[#dcfce7] text-[#16a34a] border border-[#16a34a]/20 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider uppercase">High Confidence (98%)</span>
-            </div>
-            <div className="p-5">
-              <p className="text-[14px] text-[#334155] leading-relaxed">
-                The <code className="bg-[#f1f5f9] px-1.5 py-0.5 rounded text-[#ef4444] text-[13px] font-mono border border-[#e2e8f0]">db-prod-eu-central-1</code> cluster is experiencing connection pool exhaustion due to a 400% surge in read queries from the <code className="bg-[#f1f5f9] px-1.5 py-0.5 rounded text-[#2563eb] text-[13px] font-mono border border-[#e2e8f0]">reporting-service</code>. The primary instance CPU is currently at 94%.
+
+          {/* ── Empty State ─────────────────────────────────────────────── */}
+          {!analysis && !analyzing && !analysisError && (
+            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm p-12 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 rounded-full bg-[#eff6ff] flex items-center justify-center mb-4">
+                <SparklesBlueIcon large />
+              </div>
+              <h2 className="text-lg font-bold text-[#0f172a] mb-2">No analysis yet</h2>
+              <p className="text-[14px] text-[#64748b] max-w-md">
+                Select a service and click <strong>Run Analysis</strong> to get an AI-powered diagnosis of your infrastructure.
               </p>
             </div>
-          </div>
+          )}
 
-          {/* Context & Evidence */}
-          <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm">
-            <div className="p-5 border-b border-[#e2e8f0]">
-              <h2 className="text-[15px] font-bold text-[#0f172a]">Context & Evidence</h2>
+          {/* ── Loading State ──────────────────────────────────────────── */}
+          {analyzing && (
+            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm p-12 flex flex-col items-center justify-center text-center">
+              <LoadingSpinner size="lg" className="mb-4" />
+              <h2 className="text-lg font-bold text-[#0f172a] mb-2">Running 4-agent analysis pipeline...</h2>
+              <p className="text-[14px] text-[#64748b]">
+                Analyzing logs, metrics, past incidents, and generating recommendations. This can take 10-30 seconds.
+              </p>
             </div>
-            <div className="p-5 space-y-5">
-              {/* Fake Chart */}
-              <div>
-                <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-3">Connection Pool Usage</h3>
-                <div className="h-[120px] bg-[#f8fafc] border border-[#e2e8f0] rounded-lg flex items-end p-2 gap-1 relative overflow-hidden">
-                  <div className="absolute top-4 left-4 right-4 border-t border-dashed border-[#ef4444]/50 z-0"></div>
-                  <span className="absolute top-1 left-4 text-[10px] text-[#ef4444] font-bold z-0">Max Capacity (2000)</span>
-                  
-                  {Array.from({length: 40}).map((_, i) => (
-                    <div key={i} className={`flex-1 rounded-t-sm z-10 ${i > 30 ? 'bg-[#ef4444]' : i > 25 ? 'bg-[#f59e0b]' : 'bg-[#3b82f6]'}`} style={{ height: i > 30 ? `${80 + Math.random()*20}%` : i > 25 ? `${50 + Math.random()*30}%` : `${20 + Math.random()*20}%` }}></div>
-                  ))}
+          )}
+
+          {/* ── Error State ────────────────────────────────────────────── */}
+          {analysisError && !analyzing && (
+            <div className="bg-[#fef2f2] rounded-lg border border-[#ef4444]/20 shadow-sm p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-[#ef4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h2 className="text-[15px] font-bold text-[#ef4444]">Analysis Failed</h2>
+              </div>
+              <p className="text-[14px] text-[#991b1b]">{analysisError}</p>
+              <button onClick={handleRunAnalysis} className="mt-3 text-[13px] text-[#ef4444] underline hover:no-underline">
+                Try again
+              </button>
+            </div>
+          )}
+
+          {/* ── Partial Diagnosis Warning ──────────────────────────────── */}
+          {isPartial && (
+            <div className="bg-[#fefce8] rounded-lg border border-[#ca8a04]/20 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-5 h-5 text-[#ca8a04]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h3 className="text-[14px] font-bold text-[#ca8a04]">Partial Diagnosis</h3>
+              </div>
+              <p className="text-[13px] text-[#92400e]">
+                AI decision engine returned a partial result — log and metrics analysis completed but the recommendation step failed. Try running the analysis again.
+              </p>
+            </div>
+          )}
+
+          {/* ── AI Diagnosis Card ──────────────────────────────────────── */}
+          {analysis && decision && (
+            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[#e2e8f0] flex items-center justify-between bg-[#f8fafc]">
+                <h2 className="text-[15px] font-bold text-[#0f172a] flex items-center gap-2">
+                  <SparklesBlueIcon /> AI Diagnosis
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className={`border px-2 py-0.5 rounded text-[11px] font-bold tracking-wider uppercase ${severityStyle}`}>
+                    {severity}
+                  </span>
+                  {decision.confidence != null && (
+                    <span className="bg-[#f0fdf4] text-[#16a34a] border border-[#16a34a]/20 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider">
+                      {Math.round(decision.confidence * 100)}% confidence
+                    </span>
+                  )}
                 </div>
               </div>
+              <div className="p-5 space-y-4">
+                {decision.root_cause && (
+                  <div>
+                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Root Cause</h3>
+                    <p className="text-[14px] text-[#0f172a] leading-relaxed">{decision.root_cause}</p>
+                  </div>
+                )}
+                {decision.simple_explanation && (
+                  <div>
+                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">In Simple Terms</h3>
+                    <p className="text-[14px] text-[#475569] leading-relaxed">{decision.simple_explanation}</p>
+                  </div>
+                )}
+                {decision.time_to_fix && (
+                  <div className="flex items-center gap-2 text-[13px] text-[#64748b]">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Estimated fix time: <strong className="text-[#0f172a]">{decision.time_to_fix}</strong></span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-              {/* Log Snip */}
-              <div>
-                <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-3">Relevant Logs</h3>
-                <div className="bg-[#0f172a] rounded-lg p-4 font-mono text-[12px] text-gray-300 space-y-1">
-                  <p><span className="text-gray-500">[14:23:42]</span> <span className="text-yellow-400">WARN</span> [db-proxy] Connection pool threshold reached (90%)</p>
-                  <p><span className="text-gray-500">[14:23:45]</span> <span className="text-red-400">ERROR</span> [reporting-svc] Timeout acquiring connection from pool</p>
-                  <p><span className="text-gray-500">[14:23:46]</span> <span className="text-red-400">ERROR</span> [reporting-svc] Timeout acquiring connection from pool</p>
+          {/* ── Context & Evidence Card ─────────────────────────────────── */}
+          {analysis && (
+            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm">
+              <div className="p-5 border-b border-[#e2e8f0]">
+                <h2 className="text-[15px] font-bold text-[#0f172a]">Context & Evidence</h2>
+              </div>
+              <div className="p-5 space-y-5">
+                {/* Real CPU/RAM chart */}
+                <div>
+                  <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-3">
+                    CPU & RAM — Last 1 Hour ({selectedService})
+                  </h3>
+                  {metricsChartData.length > 0 ? (
+                    <div className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={metricsChartData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                          <XAxis
+                            dataKey="time"
+                            stroke="#64748b"
+                            tick={{ fill: '#64748b', fontSize: 11 }}
+                            tickLine={false}
+                            axisLine={false}
+                            minTickGap={30}
+                          />
+                          <YAxis
+                            stroke="#64748b"
+                            tick={{ fill: '#64748b', fontSize: 11 }}
+                            tickLine={false}
+                            axisLine={false}
+                            domain={[0, 100]}
+                            tickFormatter={val => `${val}%`}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                              borderColor: '#334155',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              color: '#f8fafc',
+                              fontSize: '12px',
+                            }}
+                          />
+                          <ReferenceLine y={80} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} label={{ value: '80%', fill: '#ef4444', fontSize: 10 }} />
+                          <Line type="monotone" dataKey="cpu" name="CPU %" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: '#3b82f6' }} isAnimationActive={false} />
+                          <Line type="monotone" dataKey="ram" name="RAM %" stroke="#8b5cf6" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: '#8b5cf6' }} isAnimationActive={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-[120px] bg-[#f8fafc] border border-[#e2e8f0] rounded-lg flex items-center justify-center text-[13px] text-[#64748b]">
+                      No metrics history data available
+                    </div>
+                  )}
                 </div>
+
+                {/* Relevant Logs (real alerts) */}
+                <div>
+                  <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-3">Relevant Logs</h3>
+                  <div className="bg-[#0f172a] rounded-lg p-4 font-mono text-[12px] text-gray-300 space-y-1 max-h-[200px] overflow-y-auto custom-scrollbar">
+                    {rawLogsDisplay ? rawLogsDisplay.split('\n').map((line, i) => {
+                      const isError = line.includes('CRITICAL') || line.includes('HIGH')
+                      const isWarn = line.includes('MEDIUM') || line.includes('WARNING')
+                      return (
+                        <p key={i}>
+                          <span className={isError ? 'text-red-400' : isWarn ? 'text-yellow-400' : 'text-green-400'}>
+                            {isError ? 'ERROR' : isWarn ? 'WARN' : 'INFO'}
+                          </span>{' '}
+                          {line}
+                        </p>
+                      )
+                    }) : (
+                      <p className="text-gray-500">No log data to display.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Log Analysis output (Agent 1) */}
+                {analysis.log_analysis && (
+                  <div>
+                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Log Analysis Agent Output</h3>
+                    <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 text-[13px] text-[#334155]">
+                      {typeof analysis.log_analysis === 'string'
+                        ? analysis.log_analysis
+                        : <pre className="whitespace-pre-wrap text-[12px]">{JSON.stringify(analysis.log_analysis, null, 2)}</pre>
+                      }
+                    </div>
+                  </div>
+                )}
+
+                {/* Metrics Analysis output (Agent 2) */}
+                {analysis.metrics_analysis && (
+                  <div>
+                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Metrics Analysis Agent Output</h3>
+                    <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 text-[13px] text-[#334155]">
+                      {analysis.metrics_analysis.anomaly_score != null && (
+                        <p className="mb-1">Anomaly Score: <strong>{analysis.metrics_analysis.anomaly_score}</strong></p>
+                      )}
+                      {typeof analysis.metrics_analysis === 'string'
+                        ? analysis.metrics_analysis
+                        : <pre className="whitespace-pre-wrap text-[12px]">{JSON.stringify(analysis.metrics_analysis, null, 2)}</pre>
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Recommended Fix */}
-          <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-              <h2 className="text-[15px] font-bold text-[#0f172a] flex items-center gap-2">
-                <LightningIcon className="text-[#2563eb]" /> Recommended Fix
-              </h2>
-            </div>
-            <div className="p-5">
-              <p className="text-[13px] text-[#475569] mb-4">Scale up the read replica count from 2 to 4 to distribute the reporting load.</p>
-              <div className="bg-[#0f172a] rounded-lg p-4 font-mono text-[13px] text-[#a5b4fc] relative">
-                aws rds modify-db-cluster \<br/>
-                &nbsp;&nbsp;--db-cluster-identifier db-prod-eu-central-1 \<br/>
-                &nbsp;&nbsp;--apply-immediately
-                <button className="absolute top-3 right-3 text-gray-400 hover:text-white"><CopyIcon /></button>
+          {/* ── Recommended Fix Card ───────────────────────────────────── */}
+          {analysis && decision && decision.fix_steps && (
+            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+                <h2 className="text-[15px] font-bold text-[#0f172a] flex items-center gap-2">
+                  <LightningIcon className="text-[#2563eb]" /> Recommended Fix
+                </h2>
+                {riskLevel && (
+                  <span className={`border px-2 py-0.5 rounded text-[11px] font-bold tracking-wider uppercase ${riskStyle}`}>
+                    {actionPlan?.risk_level} risk
+                  </span>
+                )}
+              </div>
+              <div className="p-5 space-y-5">
+                {/* Action + target */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Recommended Action</h3>
+                    <p className="text-[14px] text-[#0f172a] font-mono bg-[#f1f5f9] px-3 py-2 rounded border border-[#e2e8f0]">
+                      {decision.recommended_action || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Action Target</h3>
+                    <p className="text-[14px] text-[#0f172a] font-mono bg-[#f1f5f9] px-3 py-2 rounded border border-[#e2e8f0]">
+                      {decision.action_target || selectedService}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Fix steps (numbered list) */}
+                <div>
+                  <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-3">Fix Steps</h3>
+                  <ol className="space-y-2">
+                    {decision.fix_steps.map((step, i) => (
+                      <li key={i} className="flex gap-3 items-start">
+                        <span className="shrink-0 w-6 h-6 rounded-full bg-[#2563eb] text-white text-[12px] font-bold flex items-center justify-center mt-0.5">
+                          {i + 1}
+                        </span>
+                        <p className="text-[14px] text-[#334155] leading-relaxed">{step}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Reasoning */}
+                {decision.reasoning && (
+                  <div>
+                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Reasoning</h3>
+                    <p className="text-[13px] text-[#475569] italic">{decision.reasoning}</p>
+                  </div>
+                )}
+
+                {/* View in Actions button */}
+                {actionPlan && (
+                  <button
+                    id="view-in-actions-btn"
+                    onClick={() => navigate('/actions')}
+                    className="bg-[#2563eb] text-white px-5 py-2.5 rounded-lg text-[13px] font-medium hover:bg-[#1d4ed8] shadow-sm flex items-center gap-2 transition-all"
+                  >
+                    View in Actions
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-
+          )}
         </div>
 
-        {/* Right Column: Chat */}
+        {/* ── Right Column: Chat ──────────────────────────────────────── */}
         <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm flex flex-col h-full overflow-hidden">
           <div className="p-4 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center gap-2 shrink-0">
             <img src="/logo.png" className="w-6 h-6 rounded shrink-0 object-contain" alt="Cloudy Bro" />
             <h2 className="text-[15px] font-bold text-[#0f172a]">Cloudy Bro Assistant</h2>
+            {selectedService && (
+              <span className="ml-auto text-[10px] bg-[#f1f5f9] text-[#64748b] px-2 py-1 rounded">
+                {selectedService}
+              </span>
+            )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-lg px-4 py-2.5 text-[13px] leading-relaxed ${m.role === 'user' ? 'bg-[#2563eb] text-white rounded-br-none' : 'bg-[#f1f5f9] text-[#0f172a] rounded-bl-none border border-[#e2e8f0]'}`}>
-                  {m.text}
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Messages */}
+          <ChatWindow messages={messages} thinking={thinking} />
 
-          <form onSubmit={handleSend} className="p-4 border-t border-[#e2e8f0] bg-white shrink-0">
-            <div className="relative">
-              <input 
-                type="text" 
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask a question..."
-                className="w-full pl-4 pr-10 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-[13px] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] transition-all"
-              />
-              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-[#2563eb] text-white rounded flex items-center justify-center hover:bg-[#1d4ed8]">
-                <SendIcon />
-              </button>
-            </div>
-          </form>
+          {/* Input */}
+          <ChatInput onSend={handleSend} disabled={thinking} />
         </div>
       </div>
     </div>
   )
 }
+
+// ── Icon Components (unchanged) ───────────────────────────────────────────
 
 function LightningIcon({ className = "" }) {
   return (
@@ -152,20 +547,8 @@ function LightningIcon({ className = "" }) {
   )
 }
 
-function SparklesBlueIcon() {
+function SparklesBlueIcon({ white, large }) {
   return (
-    <svg className="w-5 h-5 text-[#2563eb]" fill="currentColor" viewBox="0 0 24 24"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
-  )
-}
-
-function CopyIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-  )
-}
-
-function SendIcon() {
-  return (
-    <svg className="w-3.5 h-3.5 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+    <svg className={`${large ? 'w-8 h-8' : 'w-5 h-5'} ${white ? 'text-white' : 'text-[#2563eb]'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
   )
 }
