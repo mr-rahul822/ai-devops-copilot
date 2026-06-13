@@ -35,8 +35,36 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database tables initialised.")
 
+    # 1b. Migrate cloud_credentials table (ARN migration)
+    try:
+        from src.database import engine
+        from sqlalchemy import text as sa_text
+        async with engine.begin() as conn:
+            migrations = [
+                "ALTER TABLE cloud_credentials ADD COLUMN IF NOT EXISTS role_arn TEXT",
+                "ALTER TABLE cloud_credentials ADD COLUMN IF NOT EXISTS external_id VARCHAR(100)",
+                "ALTER TABLE cloud_credentials ADD COLUMN IF NOT EXISTS temp_credentials_expire_at TIMESTAMP",
+                "ALTER TABLE cloud_credentials DROP COLUMN IF EXISTS access_key_encrypted",
+                "ALTER TABLE cloud_credentials DROP COLUMN IF EXISTS secret_key_encrypted",
+            ]
+            for stmt in migrations:
+                try:
+                    await conn.execute(sa_text(stmt))
+                except Exception:
+                    pass  # Column may already exist/not exist
+        logger.info("cloud_credentials table migration complete.")
+    except Exception as exc:
+        logger.warning("cloud_credentials migration skipped: %s", exc)
+
     # 2. Start Kafka Producer
     await start_producer()
+
+    # Load and refresh cloud credentials if connected
+    try:
+        from src.scheduler import _refresh_credentials
+        await _refresh_credentials()
+    except Exception as exc:
+        logger.warning("Initial credential load failed: %s", exc)
 
     # 3. Start background scheduler
     start_scheduler(interval_seconds=settings.collection_interval_seconds)

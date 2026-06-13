@@ -75,7 +75,7 @@ export default function MetricsChart({ data = [], awsData = [], peakCpu = 0 }) {
       ) : (
         <>
           <div className="w-full h-[280px] mt-3" style={{ minWidth: 0, minHeight: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <XAxis
                   dataKey="time"

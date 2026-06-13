@@ -1,17 +1,22 @@
 """
-src/routes/onboarding.py — Cloud onboarding wizard endpoints.
+src/routes/onboarding.py — Cloud onboarding wizard endpoints (ARN-based).
 
-Provides a dead-simple flow:
-  1. POST /cloud/connect    — validate creds → discover instances → auto-install agent → save
-  2. GET  /cloud/status     — current connection status
-  3. DELETE /cloud/disconnect — remove credentials and stop monitoring
-  4. GET  /cloud/instances  — live EC2 instance list with latest metrics
+Uses IAM Role ARN + STS AssumeRole instead of permanent access keys.
+No permanent credentials are stored — only the role_arn and external_id.
+
+Endpoints:
+  1. GET  /cloud/trust-policy — returns Trust Policy JSON + ExternalId for the user
+  2. POST /cloud/connect     — validate ARN → AssumeRole → discover → save
+  3. GET  /cloud/status       — current connection status
+  4. DELETE /cloud/disconnect — remove credentials and stop monitoring
+  5. GET  /cloud/instances    — live EC2 instance list with latest metrics
 """
 
+import re
 import json
 import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 import boto3
@@ -23,17 +28,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
 from src.database import get_db, Base
-from src.crypto import encrypt, decrypt
 from src.models import Metric
 
 # ── ORM model for cloud_credentials ──────────────────────────────────────────
-from sqlalchemy import String, Text
+from sqlalchemy import String, Text, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
 
 class CloudCredential(Base):
-    """Stores encrypted cloud provider credentials per user."""
+    """Stores cloud provider connection info per user (ARN-based, no secrets)."""
 
     __tablename__ = "cloud_credentials"
 
@@ -41,17 +45,21 @@ class CloudCredential(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
     provider: Mapped[str] = mapped_column(String(20), nullable=False)
     region: Mapped[str] = mapped_column(String(50), nullable=False)
-    access_key_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
-    secret_key_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
+    role_arn: Mapped[str] = mapped_column(Text, nullable=False)
+    external_id: Mapped[str] = mapped_column(String(100), nullable=False)
     account_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="connected")
     instances_found: Mapped[int | None] = mapped_column(Integer, default=0)
     connected_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     last_sync_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    temp_credentials_expire_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
 
 router = APIRouter(prefix="/cloud", tags=["cloud-onboarding"])
 logger = logging.getLogger(__name__)
+
+# Regex for validating IAM Role ARN format
+ARN_PATTERN = re.compile(r"^arn:aws:iam::\d{12}:role/.+$")
 
 
 # ── Auth dependency (same pattern as metrics.py) ─────────────────────────────
@@ -95,10 +103,71 @@ def _friendly_error(exc: ClientError, fallback: str = "") -> str:
     return FRIENDLY_ERRORS.get(code, fallback or f"AWS error: {code}")
 
 
-def _make_session(access_key: str, secret_key: str, region: str):
+def _assume_role(role_arn: str, external_id: str, region: str) -> boto3.Session:
+    
+    try:
+        target_account_id = role_arn.split(":")[4]
+    except (IndexError, AttributeError):
+        target_account_id = ""
+
+    import os
+    aws_key = os.environ.get("AWS_ACCESS_KEY_ID") or None
+    aws_secret = os.environ.get("AWS_SECRET_ACCESS_KEY") or None
+
+    sts = boto3.client(
+        "sts",
+        aws_access_key_id=aws_key,
+        aws_secret_access_key=aws_secret,
+        region_name=region,
+    )
+
+    assume_params: dict = {
+        "RoleArn": role_arn,
+        "RoleSessionName": "DevOpsCopilot-Session",
+        "DurationSeconds": 3600,
+    }
+
+    if external_id:
+        assume_params["ExternalId"] = external_id
+
+    # ... baaki sab same rehne do
+
+    try:
+        assumed = sts.assume_role(**assume_params)
+    except ClientError as exc:
+        code = exc.response.get("Error", {}).get("Code", "")
+        msg = exc.response.get("Error", {}).get("Message", "")
+        logger.error(
+            "STS AssumeRole FAILED | code=%s | message=%s | role_arn=%s | has_external_id=%s | target_account=%s",
+            code, msg, role_arn, "ExternalId" in assume_params, target_account_id
+        )
+        if code == "AccessDenied":
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Could not assume your IAM Role. Please verify: "
+                    f"1) The Trust Policy includes arn:aws:iam::{settings.platform_account_id}:root, "
+                    "2) The ExternalId in the Trust Policy matches exactly, "
+                    "3) The Role ARN is correct."
+                )
+            )
+        if code == "MalformedPolicyDocument":
+            raise HTTPException(
+                status_code=400,
+                detail="The IAM Role's Trust Policy is malformed. Please copy the exact JSON from Step 1."
+            )
+        raise HTTPException(status_code=400, detail=f"STS AssumeRole failed: {code} — {msg}")
+    except EndpointConnectionError:
+        raise HTTPException(status_code=400, detail="Could not reach AWS. Please check your internet connection.")
+    except Exception as exc:
+        logger.error("STS AssumeRole unexpected error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=400, detail=f"Could not assume role: {str(exc)}")
+
+    creds = assumed["Credentials"]
     return boto3.Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
+        aws_access_key_id=creds["AccessKeyId"],
+        aws_secret_access_key=creds["SecretAccessKey"],
+        aws_session_token=creds["SessionToken"],
         region_name=region,
     )
 
@@ -127,6 +196,74 @@ CW_AGENT_CONFIG = json.dumps({
 })
 
 
+def _resolve_user_id(auth_data: dict) -> uuid.UUID:
+    """Extract user UUID from auth payload."""
+    user_data = auth_data.get("user", auth_data)
+    user_id_str = user_data.get("id") or user_data.get("userId") or user_data.get("user_id", settings.default_user_id)
+    try:
+        return uuid.UUID(str(user_id_str))
+    except ValueError:
+        return uuid.UUID(settings.default_user_id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /cloud/trust-policy
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/trust-policy")
+async def get_trust_policy(_auth: dict = Depends(require_auth)):
+    """
+    Returns the Trust Policy JSON the user must paste into their AWS IAM Role.
+    The ExternalId is unique per user — prevents confused deputy attacks.
+    """
+    user_id = _resolve_user_id(_auth)
+    external_id = f"dcp-{user_id}"
+
+    trust_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": f"arn:aws:iam::{settings.platform_account_id}:root"
+                },
+                "Action": "sts:AssumeRole",
+                "Condition": {
+                    "StringEquals": {
+                        "sts:ExternalId": external_id
+                    }
+                }
+            }
+        ]
+    }
+
+    return {
+        "trust_policy": trust_policy,
+        "external_id": external_id,
+        "platform_account_id": settings.platform_account_id,
+        "required_permissions": [
+            {
+                "policy_name": "CloudWatchAgentServerPolicy",
+                "arn": "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+                "required": True,
+                "description": "Allows collecting CPU, RAM, Disk metrics from EC2",
+            },
+            {
+                "policy_name": "AmazonEC2ReadOnlyAccess",
+                "arn": "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess",
+                "required": True,
+                "description": "Allows discovering your EC2 instances",
+            },
+            {
+                "policy_name": "AmazonSSMFullAccess",
+                "arn": "arn:aws:iam::aws:policy/AmazonSSMFullAccess",
+                "required": False,
+                "description": "Allows auto-installing CloudWatch Agent on EC2 instances",
+            },
+        ],
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # POST /cloud/connect
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -138,59 +275,68 @@ async def connect_cloud(
     _auth: dict = Depends(require_auth),
 ):
     """
-    Full automated cloud onboarding:
-      A. Validate credentials (STS)
-      B. Check required permissions
-      C. Discover EC2 instances
-      D. Check CloudWatch Agent status
-      E. Auto-install agent via SSM (best-effort)
-      F. Save encrypted credentials
-      G. Update metrics-service collector config
+    Full automated cloud onboarding (ARN-based):
+      A. Validate role_arn format
+      B. Generate ExternalId for this user
+      C. AssumeRole via STS (validates trust policy + credentials)
+      D. Verify required permissions
+      E. Get account ID
+      F. Discover EC2 instances
+      G. Check CloudWatch Agent status
+      H. Auto-install agent via SSM (if permission selected)
+      I. Save role_arn + external_id to database (no secrets stored)
+      J. Update runtime config for scheduler
     """
-    access_key = (body.get("access_key") or "").strip()
-    secret_key = (body.get("secret_key") or "").strip()
+    role_arn = (body.get("role_arn") or "").strip()
     region = (body.get("region") or "us-east-1").strip()
     provider = (body.get("provider") or "aws").lower()
+    selected_permissions = body.get("selected_permissions") or []
 
-    if not access_key or not secret_key:
-        raise HTTPException(status_code=400, detail="Please enter both your Access Key ID and Secret Access Key.")
+    user_id = _resolve_user_id(_auth)
+    progress = []
 
-    # Resolve user_id from auth token
-    user_data = _auth.get("user", _auth)
-    user_id_str = user_data.get("id") or user_data.get("userId") or user_data.get("user_id", settings.default_user_id)
+    # ── STEP A: Validate role_arn format ─────────────────────────────────
+    if not role_arn:
+        raise HTTPException(status_code=400, detail="Please enter your IAM Role ARN.")
+    if not ARN_PATTERN.match(role_arn):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Invalid Role ARN format. "
+                "It should look like: arn:aws:iam::123456789012:role/YourRoleName"
+            ),
+        )
+    progress.append({"step": "validate_arn", "status": "success", "message": "Role ARN format is valid."})
+
+    # ── STEP B: Generate ExternalId ──────────────────────────────────────
+    external_id = f"dcp-{user_id}"
+    progress.append({"step": "generate_external_id", "status": "success", "message": "ExternalId verified."})
+
+    # ── STEP C: AssumeRole via STS ───────────────────────────────────────
     try:
-        user_id = uuid.UUID(str(user_id_str))
-    except ValueError:
-        user_id = uuid.UUID(settings.default_user_id)
-
-    progress = []  # track step results for frontend
-
-    # ── STEP A: Validate credentials ────────────────────────────────────
-    account_id = None
-    try:
-        session = _make_session(access_key, secret_key, region)
-        sts = session.client("sts")
-        identity = sts.get_caller_identity()
-        account_id = identity.get("Account", "unknown")
-        progress.append({"step": "validate_credentials", "status": "success", "message": "Credentials are valid."})
-    except ClientError as exc:
-        msg = _friendly_error(exc, "Invalid AWS credentials. Please check your Access Key and Secret Key.")
-        raise HTTPException(status_code=400, detail=msg)
-    except EndpointConnectionError:
-        raise HTTPException(status_code=400, detail="Could not reach AWS. Please check your internet connection and try again.")
-    except NoCredentialsError:
-        raise HTTPException(status_code=400, detail="Please enter both your Access Key ID and Secret Access Key.")
+        assumed_session = _assume_role(role_arn, external_id, region)
+    except HTTPException:
+        raise
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Could not validate credentials: {str(exc)}")
+        raise HTTPException(status_code=400, detail=f"Could not assume role: {str(exc)}")
 
-    # ── STEP B: Check required permissions ──────────────────────────────
-    ec2 = session.client("ec2", region_name=region)
-    cw = session.client("cloudwatch", region_name=region)
+    progress.append({"step": "assume_role", "status": "success", "message": "Successfully assumed IAM Role via STS."})
+
+    # ── STEP D: Verify required permissions ──────────────────────────────
+    ec2 = assumed_session.client("ec2", region_name=region)
+    cw = assumed_session.client("cloudwatch", region_name=region)
 
     perm_checks = [
         ("ec2:DescribeInstances", lambda: ec2.describe_instances(MaxResults=5)),
         ("cloudwatch:ListMetrics", lambda: cw.list_metrics(Namespace="AWS/EC2", MaxRecords=1)),
     ]
+
+    # Optionally verify SSM permission
+    if "AmazonSSMFullAccess" in selected_permissions:
+        ssm_check = assumed_session.client("ssm", region_name=region)
+        perm_checks.append(
+            ("ssm:DescribeInstanceInformation", lambda: ssm_check.describe_instance_information(MaxResults=1))
+        )
 
     for perm_name, check_fn in perm_checks:
         try:
@@ -200,8 +346,8 @@ async def connect_cloud(
             if code in ("AccessDenied", "UnauthorizedAccess", "AccessDeniedException"):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Your AWS key is missing permission: {perm_name}. "
-                           f"In AWS IAM, attach the ReadOnlyAccess policy to your user and try again.",
+                    detail=f"Your IAM Role is missing permission: {perm_name}. "
+                           f"Please attach the required AWS managed policies to your Role.",
                 )
             raise HTTPException(status_code=400, detail=_friendly_error(exc))
         except Exception:
@@ -209,7 +355,16 @@ async def connect_cloud(
 
     progress.append({"step": "check_permissions", "status": "success", "message": "All required permissions verified."})
 
-    # ── STEP C: Discover EC2 instances ──────────────────────────────────
+    # ── STEP E: Get account ID ───────────────────────────────────────────
+    account_id = "unknown"
+    try:
+        sts_assumed = assumed_session.client("sts")
+        identity = sts_assumed.get_caller_identity()
+        account_id = identity.get("Account", "unknown")
+    except Exception as exc:
+        logger.warning("Could not get account ID: %s", exc)
+
+    # ── STEP F: Discover EC2 instances ───────────────────────────────────
     instances_info = []
     try:
         resp = ec2.describe_instances(
@@ -228,7 +383,7 @@ async def connect_cloud(
                     "type": inst.get("InstanceType", "unknown"),
                     "state": inst.get("State", {}).get("Name", "unknown"),
                     "ip": inst.get("PublicIpAddress") or inst.get("PrivateIpAddress", "N/A"),
-                    "cloudwatch_agent": False,  # will update in step D
+                    "cloudwatch_agent": False,
                     "agent_install_note": None,
                 })
     except ClientError as exc:
@@ -240,7 +395,7 @@ async def connect_cloud(
         "message": f"Found {len(instances_info)} running EC2 instance(s).",
     })
 
-    # ── STEP D: Check CloudWatch Agent status per instance ──────────────
+    # ── STEP G: Check CloudWatch Agent status per instance ───────────────
     if instances_info:
         try:
             agent_metrics = cw.list_metrics(Namespace="DevOpsCopilot")
@@ -258,16 +413,15 @@ async def connect_cloud(
 
     progress.append({"step": "check_agent", "status": "success", "message": "Checked CloudWatch Agent status."})
 
-    # ── STEP E: Auto-install CloudWatch Agent via SSM (best-effort) ─────
+    # ── STEP H: Auto-install CloudWatch Agent via SSM (best-effort) ──────
     instances_without_agent = [i for i in instances_info if not i["cloudwatch_agent"]]
 
-    if instances_without_agent:
+    if instances_without_agent and "AmazonSSMFullAccess" in selected_permissions:
         try:
-            ssm = session.client("ssm", region_name=region)
+            ssm = assumed_session.client("ssm", region_name=region)
             for inst in instances_without_agent:
                 iid = inst["instance_id"]
                 try:
-                    # Check if SSM agent is available on this instance
                     ssm_info = ssm.describe_instance_information(
                         Filters=[{"Key": "InstanceIds", "Values": [iid]}]
                     )
@@ -329,12 +483,17 @@ async def connect_cloud(
                         "CloudWatch Agent auto-install is not available. "
                         "RAM and Disk will show 0 until installed manually. CPU still works."
                     )
+    elif instances_without_agent:
+        for inst in instances_without_agent:
+            inst["agent_install_note"] = (
+                "SSM permission not selected — CloudWatch Agent was not auto-installed. "
+                "RAM and Disk will show 0 until installed manually. CPU still works."
+            )
 
     progress.append({"step": "setup_agent", "status": "success", "message": "Monitoring agent setup complete."})
 
-    # ── STEP F: Save encrypted credentials ──────────────────────────────
+    # ── STEP I: Save to database (ARN + ExternalId only, NO secrets) ─────
     try:
-        # Upsert: delete old record if exists, then insert
         await db.execute(
             delete(CloudCredential).where(
                 CloudCredential.user_id == user_id,
@@ -345,34 +504,39 @@ async def connect_cloud(
             user_id=user_id,
             provider=provider,
             region=region,
-            access_key_encrypted=encrypt(access_key),
-            secret_key_encrypted=encrypt(secret_key),
+            role_arn=role_arn,
+            external_id=external_id,
             account_id=account_id,
             status="connected",
             instances_found=len(instances_info),
             connected_at=datetime.utcnow(),
+            temp_credentials_expire_at=datetime.utcnow() + timedelta(hours=1),
         )
         db.add(cred)
         await db.commit()
 
-        progress.append({"step": "save_credentials", "status": "success", "message": "Credentials saved securely."})
+        progress.append({"step": "save_connection", "status": "success", "message": "Connection saved securely."})
     except Exception as exc:
-        logger.error("Failed to save credentials: %s", exc)
-        raise HTTPException(status_code=500, detail="Could not save credentials. Please try again.")
+        logger.error("Failed to save connection: %s", exc)
+        raise HTTPException(status_code=500, detail="Could not save connection. Please try again.")
 
-    # ── STEP G: Update the runtime config so collector uses new keys ────
-    settings.aws_access_key_id = access_key
-    settings.aws_secret_access_key = secret_key
+    # ── STEP J: Update runtime config for scheduler ──────────────────────
+    assumed_creds = assumed_session.get_credentials().get_frozen_credentials()
+    settings.aws_role_arn = role_arn
+    settings.aws_access_key_id = assumed_creds.access_key
+    settings.aws_secret_access_key = assumed_creds.secret_key
+    settings.aws_session_token = assumed_creds.token
     settings.aws_default_region = region
 
     progress.append({"step": "start_monitoring", "status": "success", "message": "Metrics collection started."})
 
-    # ── Build response ──────────────────────────────────────────────────
+    # ── Build response ───────────────────────────────────────────────────
     return {
         "status": "connected",
         "provider": provider,
         "account_id": account_id,
         "region": region,
+        "role_arn": role_arn,
         "instances_discovered": [
             {
                 "instance_id": i["instance_id"],
@@ -407,12 +571,7 @@ async def cloud_status(
     _auth: dict = Depends(require_auth),
 ):
     """Returns the current cloud connection status for the authenticated user."""
-    user_data = _auth.get("user", _auth)
-    user_id_str = user_data.get("id") or user_data.get("userId") or user_data.get("user_id", settings.default_user_id)
-    try:
-        user_id = uuid.UUID(str(user_id_str))
-    except ValueError:
-        user_id = uuid.UUID(settings.default_user_id)
+    user_id = _resolve_user_id(_auth)
 
     # Fetch AWS credential record
     result = await db.execute(
@@ -441,9 +600,15 @@ async def cloud_status(
             "connected": aws_cred is not None and aws_cred.status == "connected",
             "account_id": aws_cred.account_id if aws_cred else None,
             "region": aws_cred.region if aws_cred else None,
+            "role_arn": aws_cred.role_arn if aws_cred else None,
+            "external_id": aws_cred.external_id if aws_cred else None,
             "instances": aws_cred.instances_found if aws_cred else 0,
             "last_metric_at": last_metric,
             "connected_at": aws_cred.connected_at.isoformat() if aws_cred and aws_cred.connected_at else None,
+            "credentials_expire_at": (
+                aws_cred.temp_credentials_expire_at.isoformat()
+                if aws_cred and aws_cred.temp_credentials_expire_at else None
+            ),
         },
         "azure": {"connected": False},
         "gcp": {"connected": False},
@@ -462,13 +627,7 @@ async def disconnect_cloud(
 ):
     """Remove cloud credentials and stop monitoring."""
     provider = (body.get("provider") or "aws").lower()
-
-    user_data = _auth.get("user", _auth)
-    user_id_str = user_data.get("id") or user_data.get("userId") or user_data.get("user_id", settings.default_user_id)
-    try:
-        user_id = uuid.UUID(str(user_id_str))
-    except ValueError:
-        user_id = uuid.UUID(settings.default_user_id)
+    user_id = _resolve_user_id(_auth)
 
     # Delete credential record
     await db.execute(
@@ -481,8 +640,10 @@ async def disconnect_cloud(
 
     # Clear runtime config
     if provider == "aws":
+        settings.aws_role_arn = ""
         settings.aws_access_key_id = ""
         settings.aws_secret_access_key = ""
+        settings.aws_session_token = ""
 
     return {"status": "disconnected", "provider": provider, "message": "Cloud account disconnected."}
 
@@ -497,12 +658,7 @@ async def get_instances(
     _auth: dict = Depends(require_auth),
 ):
     """Returns live EC2 instance list with latest metrics from the DB."""
-    user_data = _auth.get("user", _auth)
-    user_id_str = user_data.get("id") or user_data.get("userId") or user_data.get("user_id", settings.default_user_id)
-    try:
-        user_id = uuid.UUID(str(user_id_str))
-    except ValueError:
-        user_id = uuid.UUID(settings.default_user_id)
+    user_id = _resolve_user_id(_auth)
 
     # Get stored credentials
     result = await db.execute(
@@ -516,18 +672,18 @@ async def get_instances(
     if not cred:
         return {"instances": [], "message": "No AWS account connected."}
 
-    # Decrypt keys
+    # Assume role to get fresh session
     try:
-        access_key = decrypt(cred.access_key_encrypted)
-        secret_key = decrypt(cred.secret_key_encrypted)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Could not decrypt stored credentials.")
+        assumed_session = _assume_role(cred.role_arn, cred.external_id, cred.region)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not assume role: {str(exc)}")
 
     # Fetch live instance list
     try:
-        session = _make_session(access_key, secret_key, cred.region)
-        ec2 = session.client("ec2", region_name=cred.region)
-        cw = session.client("cloudwatch", region_name=cred.region)
+        ec2 = assumed_session.client("ec2", region_name=cred.region)
+        cw = assumed_session.client("cloudwatch", region_name=cred.region)
 
         resp = ec2.describe_instances(
             Filters=[{"Name": "instance-state-name", "Values": ["running", "stopped"]}]

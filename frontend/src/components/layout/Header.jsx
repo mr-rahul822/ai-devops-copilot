@@ -20,20 +20,15 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-[240px] right-0 h-[60px] bg-white dark:bg-gray-900 border-b border-[#e2e8f0] dark:border-gray-700 flex items-center justify-between px-8 z-20 transition-colors">
-      {/* Left: Cloud Selector */}
-      <div className="flex items-center gap-6">
-        {['AWS', 'Azure', 'GCP'].map((cloud, i) => (
-          <button
-            key={cloud}
-            className={`text-[13px] font-semibold tracking-wide py-[19px] ${
-              i === 0
-                ? 'text-[#2563eb] border-b-2 border-[#2563eb]'
-                : 'text-[#64748b] dark:text-gray-400 hover:text-[#0f172a] dark:hover:text-gray-200'
-            }`}
-          >
-            {cloud}
-          </button>
-        ))}
+      {/* Left: Page context */}
+      <div className="flex items-center gap-3">
+        <span className="text-[15px] font-semibold text-[#0f172a] dark:text-white tracking-tight">
+          Cloudy Bro
+        </span>
+        <span className="text-[#cbd5e1] dark:text-gray-600">|</span>
+        <span className="text-[13px] font-medium text-[#64748b] dark:text-gray-400">
+          Enterprise Control Plane
+        </span>
       </div>
 
       {/* Right: Actions */}

@@ -15,7 +15,7 @@ services:
     networks:
       - copilot-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      test: [ "CMD-SHELL", "pg_isready -U authuser -d authdb" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -31,7 +31,7 @@ services:
     networks:
       - copilot-net
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      test: [ "CMD", "nc", "-z", "localhost", "2181" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,7 +57,7 @@ services:
     networks:
       - copilot-net
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      test: [ "CMD", "nc", "-z", "localhost", "9092" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -72,12 +72,7 @@ services:
       - copilot-net
     # Creates the metrics-stream topic and then exits
     command: >
-      bash -c "
-      echo 'Waiting for Kafka to be ready...' &&
-      cub kafka-ready -b kafka:9092 1 20 &&
-      kafka-topics --create --topic metrics-stream --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
-      echo 'Topic created successfully.'
-      "
+      bash -c " echo 'Waiting for Kafka to be ready...' && cub kafka-ready -b kafka:9092 1 20 && kafka-topics --create --topic metrics-stream --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 && echo 'Topic created successfully.' "
 
   # ── APP SERVICES ───────────────────────────────────────────────────────────
   auth-service:
@@ -117,8 +112,7 @@ services:
       COLLECTION_INTERVAL_SECONDS: 60
       ENVIRONMENT: development
       KAFKA_BROKER: kafka:9092
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      PLATFORM_ACCOUNT_ID: ${PLATFORM_ACCOUNT_ID:-482624378370}
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-I_NZZVow_HLrCYvQyOLDQlpr38VLtCAuZn_FyBo0Nvw=}
     depends_on:
@@ -203,8 +197,7 @@ services:
       AUTH_SERVICE_URL: http://auth-service:3001
       AI_ENGINE_URL: http://ai-engine:8002
       DRY_RUN: "true"
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      PLATFORM_ACCOUNT_ID: ${PLATFORM_ACCOUNT_ID:-482624378370}
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     volumes:
       # Use the Linux docker socket path on all operating systems.

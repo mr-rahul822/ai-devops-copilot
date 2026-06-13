@@ -12,9 +12,11 @@ export default function AISummary({ overallHealth }) {
     try {
       const res = await chatWithAI({
         message: "Give me a complete health summary of all monitored services right now. Keep it brief and professional. End with 'RECOMMENDED ACTION: [action]' and 'CONFIDENCE: [percent]%'.",
-        context: { state: "dashboard" }
+        user_id: '00000000-0000-0000-0000-000000000001',
+        conversation_history: [],
       })
-      const text = res.data?.response || ""
+      // API returns `reply` per ChatResponse schema
+      const text = res.data?.reply || res.data?.response || ""
       
       // Parse out the recommendation and confidence if the AI formatted it properly
       let newSummary = text

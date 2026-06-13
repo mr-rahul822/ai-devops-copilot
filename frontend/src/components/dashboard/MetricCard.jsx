@@ -66,7 +66,7 @@ export default function MetricCard({ type, data, serviceFilter }) {
         </div>
         
         <div className="h-[80px] w-full mb-3">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={processedData}>
               <defs>
                 <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
@@ -100,7 +100,7 @@ export default function MetricCard({ type, data, serviceFilter }) {
         </div>
         
         <div className="h-[80px] w-full mb-3">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={processedData}>
               <defs>
                 <linearGradient id="colorRam" x1="0" y1="0" x2="0" y2="1">
@@ -169,7 +169,7 @@ export default function MetricCard({ type, data, serviceFilter }) {
         </div>
         
         <div className="h-[80px] w-full mb-3">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={processedData}>
               <Line type="monotone" dataKey="networkReqs" stroke="#06b6d4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
               <Line type="monotone" dataKey="networkMbs" stroke="#ffffff" strokeWidth={1.5} dot={false} strokeOpacity={0.5} isAnimationActive={false} />

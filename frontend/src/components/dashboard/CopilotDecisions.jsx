@@ -36,7 +36,7 @@ export default function CopilotDecisions() {
         <svg className="w-4 h-4 text-[#2563eb]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-        <h3 className="text-xs font-bold tracking-[0.1em] text-[#0f172a] dark:text-gray-100 uppercase">Copilot Decisions</h3>
+        <h3 className="text-xs font-bold tracking-[0.1em] text-[#0f172a] dark:text-gray-100 uppercase">Cloudy Bro Decisions</h3>
       </div>
       <p className="text-[11px] text-[#64748b] dark:text-gray-400 mb-4">Last 3 automated events</p>
 
@@ -79,7 +79,7 @@ export default function CopilotDecisions() {
         href="/settings"
         className="mt-4 block w-full text-center bg-[#0f172a] dark:bg-[#2563eb] text-white text-xs font-semibold py-3 rounded-lg hover:bg-[#1e293b] dark:hover:bg-[#1d4ed8] transition-colors"
       >
-        MANAGE COPILOT POLICIES →
+        MANAGE POLICIES →
       </a>
     </div>
   )

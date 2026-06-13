@@ -63,11 +63,7 @@ export default function Dashboard() {
       
       {/* SECTION 1: Top Header Row */}
       <div className="mb-6">
-        <div className="flex items-center gap-6 border-b border-[#334155] mb-6 px-1">
-          <button className="text-[#3b82f6] border-b-2 border-[#3b82f6] pb-2 text-[13px] font-bold uppercase tracking-wider">AWS</button>
-          <button className="text-[#64748b] hover:text-[#cbd5e1] pb-2 text-[13px] font-bold uppercase tracking-wider transition-colors">Azure</button>
-          <button className="text-[#64748b] hover:text-[#cbd5e1] pb-2 text-[13px] font-bold uppercase tracking-wider transition-colors">GCP</button>
-        </div>
+
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>

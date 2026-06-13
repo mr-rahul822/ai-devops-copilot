@@ -10,6 +10,8 @@ import { format } from 'date-fns'
 export default function Chat() {
   const [messages, setMessages] = useState([])
   const [thinking, setThinking] = useState(false)
+  // Keep conversation_history in sync with messages for multi-turn context
+  const conversationHistory = messages.map(m => ({ role: m.role, content: m.content }))
 
   // Live context panel data
   const { data: metricsData } = useQuery({
@@ -46,12 +48,13 @@ export default function Chat() {
       const res = await chatWithAI({
         message: text,
         user_id: '00000000-0000-0000-0000-000000000001',
-        context: { avg_cpu: avgCpu, avg_ram: avgRam, open_alerts: openAlerts },
+        conversation_history: conversationHistory,
       })
       const data = res.data
       const aiMsg = {
         role: 'assistant',
-        content: data.response || data.message || data.simple_explanation || JSON.stringify(data),
+        // API returns `reply` field per ChatResponse schema
+        content: data.reply || data.response || data.message || data.simple_explanation || JSON.stringify(data),
         fix_steps: data.fix_steps || data.recommended_steps || null,
         severity: data.severity || null,
         time: format(new Date(), 'HH:mm'),
@@ -81,12 +84,8 @@ export default function Chat() {
           {/* Header */}
           <div className="px-4 py-3 border-b border-[#e2e8f0] dark:border-gray-700 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#2563eb] flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="font-semibold text-sm text-[#0f172a] dark:text-gray-100">AI DevOps Assistant</span>
+              <img src="/logo.png" className="w-7 h-7 rounded shrink-0 object-contain" alt="Cloudy Bro" />
+              <span className="font-semibold text-sm text-[#0f172a] dark:text-gray-100">Cloudy Bro Assistant</span>
             </div>
             <span className="text-[10px] bg-[#f1f5f9] dark:bg-gray-700 text-[#64748b] dark:text-gray-300 px-2 py-1 rounded">Powered by Gemini</span>
           </div>

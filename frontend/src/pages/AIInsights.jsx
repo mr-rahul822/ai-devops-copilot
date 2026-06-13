@@ -112,12 +112,8 @@ export default function AIInsights() {
         {/* Right Column: Chat */}
         <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm flex flex-col h-full overflow-hidden">
           <div className="p-4 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center gap-2 shrink-0">
-            <div className="w-6 h-6 rounded bg-[#2563eb] flex items-center justify-center">
-              <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c2.31 0 4.43-.79 6.12-2.11l-2.06-2.5A6.974 6.974 0 0 1 12 19c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.55 0 2.97.51 4.12 1.37l2.17-2.31C16.54 2.8 14.38 2 12 2z"/>
-              </svg>
-            </div>
-            <h2 className="text-[15px] font-bold text-[#0f172a]">Copilot Assistant</h2>
+            <img src="/logo.png" className="w-6 h-6 rounded shrink-0 object-contain" alt="Cloudy Bro" />
+            <h2 className="text-[15px] font-bold text-[#0f172a]">Cloudy Bro Assistant</h2>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">

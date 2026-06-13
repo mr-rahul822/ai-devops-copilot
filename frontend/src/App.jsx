@@ -9,6 +9,7 @@ import Actions from './pages/Actions'
 import Settings from './pages/Settings'
 import CloudConfiguration from './pages/CloudConfiguration'
 import AIInsights from './pages/AIInsights'
+import ComingSoon from './pages/ComingSoon'
 
 function ProtectedRoute({ children }) {
   const token = useStore((s) => s.token)
@@ -28,15 +29,15 @@ export default function App() {
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/clusters" element={<Dashboard />} />
-        <Route path="/metrics" element={<Dashboard />} />
+        <Route path="/clusters" element={<ComingSoon />} />
+        <Route path="/metrics" element={<ComingSoon />} />
         <Route path="/alerts" element={<Alerts />} />
-        <Route path="/logs" element={<Dashboard />} />
+        <Route path="/logs" element={<ComingSoon />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/actions" element={<Actions />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/multi-cloud" element={<Dashboard />} />
-        <Route path="/cost" element={<Dashboard />} />
+        <Route path="/multi-cloud" element={<ComingSoon />} />
+        <Route path="/cost" element={<ComingSoon />} />
         <Route path="/cloud-configuration" element={<CloudConfiguration />} />
         <Route path="/insights" element={<AIInsights />} />
       </Route>

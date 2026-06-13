@@ -28,14 +28,9 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-6 pb-6 border-b border-[#1f2937]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#2563eb] flex items-center justify-center shrink-0">
-            {/* Simple 'C' icon to represent Copilot */}
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c2.31 0 4.43-.79 6.12-2.11l-2.06-2.5A6.974 6.974 0 0 1 12 19c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.55 0 2.97.51 4.12 1.37l2.17-2.31C16.54 2.8 14.38 2 12 2z"/>
-            </svg>
-          </div>
+          <img src="/logo.png" className="w-8 h-8 rounded shrink-0 object-contain" alt="Cloudy Bro Logo" />
           <div>
-            <h1 className="text-white font-bold text-[15px] tracking-tight leading-tight">AI DevOps Copilot</h1>
+            <h1 className="text-white font-bold text-[15px] tracking-tight leading-tight">Cloudy Bro</h1>
             <p className="text-[#94a3b8] text-[11px] font-medium tracking-wide">Enterprise Control Plane</p>
           </div>
         </div>

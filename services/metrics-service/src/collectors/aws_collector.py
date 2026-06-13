@@ -26,10 +26,11 @@ CW_AGENT_NAMESPACE = "DevOpsCopilot"
 
 
 def get_boto_session():
-    """Create a Boto3 session using config credentials."""
+    """Create a Boto3 session using temporary STS credentials from config."""
     return boto3.Session(
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
+        aws_session_token=settings.aws_session_token,
         region_name=settings.aws_default_region,
     )
 
@@ -204,7 +205,7 @@ def collect() -> list[dict]:
     Returns a list of raw dicts consumed by the normalizer.
     """
     if not settings.aws_access_key_id or not settings.aws_secret_access_key:
-        logger.warning("AWS credentials missing — skipping EC2 collection.")
+        logger.warning("AWS credentials not available — skipping EC2 collection. Connect via Cloud Configuration to start.")
         return []
 
     try:

@@ -47,8 +47,18 @@ export const triggerCollection = () =>
 // ── Cloud Onboarding API ──────────────────────────────────────────────────
 
 /**
- * Connect a cloud provider (AWS).
- * @param {{ provider: string, access_key: string, secret_key: string, region: string }} data
+ * Fetch Trust Policy JSON + ExternalId for the logged-in user.
+ * Used in Step 1 of the cloud configuration wizard.
+ */
+export const getTrustPolicy = () =>
+  metricsClient.get('/cloud/trust-policy').catch((err) => {
+    console.error('[cloud] Trust policy fetch failed:', err?.response?.status)
+    throw err
+  })
+
+/**
+ * Connect a cloud provider (AWS) using IAM Role ARN.
+ * @param {{ provider: string, role_arn: string, region: string, selected_permissions: string[] }} data
  */
 export const connectCloud = (data) =>
   metricsClient.post('/cloud/connect', data).catch((err) => {

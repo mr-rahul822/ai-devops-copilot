@@ -19,7 +19,7 @@ export default function CpuChart({ data, alerts, selectedService = 'All' }) {
 
   return (
     <div className="w-full h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <LineChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.3} />
           <XAxis 

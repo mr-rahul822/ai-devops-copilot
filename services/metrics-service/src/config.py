@@ -9,9 +9,17 @@ class Settings(BaseSettings):
     collection_interval_seconds: int = 60
     environment: str = "development"
     kafka_broker: str = "kafka:9092"  # Phase 3: Kafka producer
-    aws_access_key_id: str = ""
-    aws_secret_access_key: str = ""
+
+    # AWS ARN-based authentication (STS AssumeRole)
+    aws_role_arn: str = ""                # Currently assumed role ARN (runtime)
     aws_default_region: str = "us-east-1"
+    platform_account_id: str = "482624378370"  # Platform's own AWS account ID
+
+    # Ephemeral STS credentials (in-memory only, refreshed every 55 min)
+    aws_access_key_id: str = ""       # Temp credential from AssumeRole
+    aws_secret_access_key: str = ""   # Temp credential from AssumeRole
+    aws_session_token: str = ""       # Temp session token from AssumeRole
+
     encryption_key: str = ""
 
     class Config:

@@ -11,7 +11,7 @@ import {
 export default function NetworkChart({ data }) {
   return (
     <div className="w-full h-[220px]">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <LineChart data={data} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.3} />
           <XAxis 
