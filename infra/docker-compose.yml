@@ -169,6 +169,7 @@ services:
       AUTH_SERVICE_URL: http://auth-service:3001
       JWT_SECRET: "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5"
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-devops-copilot-internal-2026}
     volumes:
       - ../model-cache:/root/.cache/huggingface
     depends_on:
@@ -199,6 +200,7 @@ services:
       DRY_RUN: "true"
       PLATFORM_ACCOUNT_ID: ${PLATFORM_ACCOUNT_ID:-482624378370}
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      INTERNAL_SECRET: ${INTERNAL_SECRET:-devops-copilot-internal-2026}
     volumes:
       # Use the Linux docker socket path on all operating systems.
       # Docker Desktop (WSL2 backend) automatically maps this to the Windows Docker engine.

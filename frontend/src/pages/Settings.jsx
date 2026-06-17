@@ -1,146 +1,205 @@
-import { useState } from 'react'
-
-const clouds = [
-  { id: 'aws', name: 'Amazon Web Services', label: 'IAM Role ARN', placeholder: 'arn:aws:iam::123456789:role/DevOpsCopilot' },
-  { id: 'azure', name: 'Microsoft Azure', label: 'Service Principal ID', placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
-  { id: 'gcp', name: 'Google Cloud Platform', label: 'Service Account JSON', placeholder: 'Paste service account JSON...' },
-]
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getProfile, updateProfile, changePassword } from '../api/auth'
+import useStore from '../store/useStore'
 
 export default function Settings() {
-  const [connected, setConnected] = useState({ aws: false, azure: false, gcp: false })
-  const [creds, setCreds] = useState({ aws: '', azure: '', gcp: '' })
-  const [thresholds, setThresholds] = useState({ cpu: 85, ram: 90, disk: 80, silent: 3 })
-  const [saved, setSaved] = useState(false)
+  const navigate = useNavigate()
+  const { user: storeUser } = useStore()
 
-  const toggleConnect = (id) => {
-    setConnected((prev) => ({ ...prev, [id]: !prev[id] }))
+  // Profile state
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileMsg, setProfileMsg] = useState({ type: '', text: '' })
+
+  // Password state
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' })
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await getProfile()
+        const u = res.data?.user || res.data
+        setName(u?.name || '')
+        setEmail(u?.email || '')
+      } catch {
+        setEmail(storeUser?.email || '')
+      } finally {
+        setProfileLoading(false)
+      }
+    }
+    loadProfile()
+  }, [])
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault()
+    if (!name.trim()) {
+      setProfileMsg({ type: 'error', text: 'Name cannot be empty.' })
+      return
+    }
+    setProfileSaving(true)
+    setProfileMsg({ type: '', text: '' })
+    try {
+      await updateProfile({ name: name.trim() })
+      setProfileMsg({ type: 'success', text: '✓ Profile updated successfully.' })
+    } catch (err) {
+      setProfileMsg({ type: 'error', text: err?.response?.data?.error || 'Failed to update profile.' })
+    } finally {
+      setProfileSaving(false)
+    }
   }
 
-  const handleSaveThresholds = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordMsg({ type: 'error', text: 'All fields are required.' })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ type: 'error', text: 'New passwords do not match.' })
+      return
+    }
+    if (newPassword.length < 8) {
+      setPasswordMsg({ type: 'error', text: 'New password must be at least 8 characters.' })
+      return
+    }
+    setPasswordSaving(true)
+    setPasswordMsg({ type: '', text: '' })
+    try {
+      await changePassword({ current_password: currentPassword, new_password: newPassword })
+      setPasswordMsg({ type: 'success', text: '✓ Password changed successfully.' })
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err) {
+      setPasswordMsg({ type: 'error', text: err?.response?.data?.error || 'Failed to change password.' })
+    } finally {
+      setPasswordSaving(false)
+    }
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-[#0f172a] dark:text-gray-100 mb-6">Settings</h1>
+    <div className="max-w-[700px] mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-[#0f172a] dark:text-gray-100">Settings</h1>
+        <p className="text-[13px] text-[#64748b] dark:text-gray-400 mt-1">Manage your account and preferences.</p>
+      </div>
 
-      {/* Cloud connections */}
-      <div className="mb-8">
-        <h2 className="text-sm font-bold text-[#0f172a] dark:text-gray-100 mb-4">Cloud Connections</h2>
-        <div className="grid grid-cols-3 gap-4">
-          {clouds.map((cloud) => (
-            <div key={cloud.id} className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-2xl p-5 transition-colors">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-bold text-sm text-[#0f172a] dark:text-gray-100">{cloud.name}</span>
-                <span className="flex items-center gap-1.5 text-xs">
-                  <span className={`w-2 h-2 rounded-full ${connected[cloud.id] ? 'bg-[#16a34a]' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                  <span className={connected[cloud.id] ? 'text-[#16a34a]' : 'text-[#64748b] dark:text-gray-400'}>
-                    {connected[cloud.id] ? 'Connected' : 'Not Connected'}
-                  </span>
-                </span>
-              </div>
+      {/* Profile Section */}
+      <div className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-2xl p-6 mb-6 transition-colors">
+        <h2 className="text-[15px] font-bold text-[#0f172a] dark:text-gray-100 mb-5">Profile</h2>
 
-              <label className="block text-xs text-[#64748b] dark:text-gray-400 font-medium mb-1.5">{cloud.label}</label>
-              {cloud.id === 'gcp' ? (
-                <textarea
-                  value={creds[cloud.id]}
-                  onChange={(e) => setCreds((p) => ({ ...p, [cloud.id]: e.target.value }))}
-                  placeholder={cloud.placeholder}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-[#e2e8f0] dark:border-gray-600 rounded-lg text-xs text-[#0f172a] dark:text-gray-100 bg-white dark:bg-gray-700 placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent resize-none mb-3"
-                />
-              ) : (
-                <input
-                  type="password"
-                  value={creds[cloud.id]}
-                  onChange={(e) => setCreds((p) => ({ ...p, [cloud.id]: e.target.value }))}
-                  placeholder={cloud.placeholder}
-                  className="w-full px-3 py-2 border border-[#e2e8f0] dark:border-gray-600 rounded-lg text-xs text-[#0f172a] dark:text-gray-100 bg-white dark:bg-gray-700 placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent mb-3"
-                />
-              )}
+        {profileLoading ? (
+          <div className="space-y-3 animate-pulse">
+            <div className="h-4 w-24 bg-[#e2e8f0] dark:bg-gray-700 rounded" />
+            <div className="h-10 bg-[#e2e8f0] dark:bg-gray-700 rounded-lg" />
+          </div>
+        ) : (
+          <form onSubmit={handleSaveProfile} className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#334155] dark:text-gray-300 mb-1.5">Display Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Your name"
+                className="w-full px-3 py-2.5 border border-[#e2e8f0] dark:border-gray-600 rounded-lg text-[14px] bg-white dark:bg-gray-700 text-[#0f172a] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#334155] dark:text-gray-300 mb-1.5">Email</label>
+              <input
+                type="email"
+                value={email}
+                disabled
+                className="w-full px-3 py-2.5 border border-[#e2e8f0] dark:border-gray-600 rounded-lg text-[14px] bg-[#f8fafc] dark:bg-gray-800 text-[#64748b] dark:text-gray-400 cursor-not-allowed"
+              />
+              <p className="text-[11px] text-[#94a3b8] mt-1">Email cannot be changed.</p>
+            </div>
 
-              <button
-                onClick={() => toggleConnect(cloud.id)}
-                className={`w-full py-2 text-xs font-semibold rounded-lg transition-colors ${
-                  connected[cloud.id]
-                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40'
-                    : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8]'
-                }`}
-              >
-                {connected[cloud.id] ? 'Disconnect' : 'Connect'}
-              </button>
-
-              <p className="text-[10px] text-[#94a3b8] mt-2 text-center">
-                Credentials are encrypted with AES-256 before storage
+            {profileMsg.text && (
+              <p className={`text-[13px] font-medium ${profileMsg.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {profileMsg.text}
               </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={profileSaving}
+              className="px-5 py-2.5 bg-[#2563eb] text-white text-[13px] font-medium rounded-lg hover:bg-[#1d4ed8] disabled:opacity-50 transition-colors"
+            >
+              {profileSaving ? 'Saving...' : 'Save Profile'}
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Change Password Section */}
+      <div className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-2xl p-6 mb-6 transition-colors">
+        <h2 className="text-[15px] font-bold text-[#0f172a] dark:text-gray-100 mb-5">Change Password</h2>
+
+        <form onSubmit={handleChangePassword} className="space-y-4">
+          {[
+            { label: 'Current Password', value: currentPassword, onChange: setCurrentPassword, placeholder: '••••••••' },
+            { label: 'New Password', value: newPassword, onChange: setNewPassword, placeholder: 'Min. 8 characters' },
+            { label: 'Confirm New Password', value: confirmPassword, onChange: setConfirmPassword, placeholder: '••••••••' },
+          ].map(({ label, value, onChange, placeholder }) => (
+            <div key={label}>
+              <label className="block text-[13px] font-semibold text-[#334155] dark:text-gray-300 mb-1.5">{label}</label>
+              <input
+                type="password"
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                placeholder={placeholder}
+                className="w-full px-3 py-2.5 border border-[#e2e8f0] dark:border-gray-600 rounded-lg text-[14px] bg-white dark:bg-gray-700 text-[#0f172a] dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent"
+              />
             </div>
           ))}
-        </div>
-      </div>
 
-      {/* Alert thresholds */}
-      <div className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-2xl p-5 transition-colors">
-        <h2 className="text-sm font-bold text-[#0f172a] dark:text-gray-100 mb-4">Alert Rules</h2>
-
-        <div className="space-y-5">
-          <SliderField
-            label="CPU Spike Threshold"
-            value={thresholds.cpu}
-            onChange={(v) => setThresholds((p) => ({ ...p, cpu: v }))}
-            min={50} max={100} unit="%"
-          />
-          <SliderField
-            label="RAM Critical Threshold"
-            value={thresholds.ram}
-            onChange={(v) => setThresholds((p) => ({ ...p, ram: v }))}
-            min={50} max={100} unit="%"
-          />
-          <SliderField
-            label="Disk Warning Threshold"
-            value={thresholds.disk}
-            onChange={(v) => setThresholds((p) => ({ ...p, disk: v }))}
-            min={50} max={100} unit="%"
-          />
-          <SliderField
-            label="Silent Service Timeout"
-            value={thresholds.silent}
-            onChange={(v) => setThresholds((p) => ({ ...p, silent: v }))}
-            min={1} max={10} unit=" min"
-          />
-        </div>
-
-        <div className="mt-5 flex items-center gap-3">
-          <button
-            onClick={handleSaveThresholds}
-            className="px-6 py-2.5 bg-[#2563eb] text-white text-sm font-semibold rounded-lg hover:bg-[#1d4ed8] transition-colors"
-          >
-            Save Thresholds
-          </button>
-          {saved && (
-            <span className="text-[#16a34a] text-sm font-semibold">✓ Saved successfully</span>
+          {passwordMsg.text && (
+            <p className={`text-[13px] font-medium ${passwordMsg.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {passwordMsg.text}
+            </p>
           )}
+
+          <button
+            type="submit"
+            disabled={passwordSaving}
+            className="px-5 py-2.5 bg-[#0f172a] dark:bg-gray-700 text-white text-[13px] font-medium rounded-lg hover:bg-[#1e293b] disabled:opacity-50 transition-colors"
+          >
+            {passwordSaving ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
+      </div>
+
+      {/* Cloud Configuration Link */}
+      <div className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-2xl p-6 mb-6 transition-colors">
+        <h2 className="text-[15px] font-bold text-[#0f172a] dark:text-gray-100 mb-2">Cloud Configuration</h2>
+        <p className="text-[13px] text-[#64748b] dark:text-gray-400 mb-4">Connect and manage your AWS, Azure, or GCP accounts.</p>
+        <button
+          onClick={() => navigate('/cloud-configuration')}
+          className="px-5 py-2.5 bg-[#ff9900] text-white text-[13px] font-medium rounded-lg hover:bg-[#e68a00] transition-colors"
+        >
+          Manage Cloud Connections →
+        </button>
+      </div>
+
+      {/* Coming Soon Section */}
+      <div className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-2xl p-6 transition-colors opacity-60">
+        <h2 className="text-[15px] font-bold text-[#0f172a] dark:text-gray-100 mb-2">Security (Coming Soon)</h2>
+        <div className="space-y-2 text-[13px] text-[#64748b] dark:text-gray-400">
+          <p>🔐 Two-Factor Authentication (TOTP)</p>
+          <p>📱 Active Sessions Management</p>
+          <p>🔔 Security Alert Notifications</p>
+          <p>🗑️ Account Deletion</p>
         </div>
       </div>
-    </div>
-  )
-}
-
-function SliderField({ label, value, onChange, min, max, unit }) {
-  return (
-    <div>
-      <div className="flex justify-between text-sm mb-2">
-        <span className="text-[#64748b] dark:text-gray-400">{label}</span>
-        <span className="font-semibold text-[#0f172a] dark:text-gray-100">{value}{unit}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-2 bg-[#e2e8f0] dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-[#2563eb]"
-      />
     </div>
   )
 }

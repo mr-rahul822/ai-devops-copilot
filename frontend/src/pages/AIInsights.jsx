@@ -350,7 +350,7 @@ export default function AIInsights() {
                   </h3>
                   {metricsChartData.length > 0 ? (
                     <div className="h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                         <LineChart data={metricsChartData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                           <XAxis

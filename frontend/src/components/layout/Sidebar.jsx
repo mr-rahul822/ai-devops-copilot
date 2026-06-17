@@ -1,5 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import useStore from '../../store/useStore'
+import { getAlerts } from '../../api/alerts'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: GridIcon },
@@ -17,6 +19,22 @@ const navItems = [
 export default function Sidebar() {
   const logout = useStore((s) => s.logout)
   const navigate = useNavigate()
+
+  // Real alert count badge
+  const { data: openAlertCount = 0 } = useQuery({
+    queryKey: ['sidebar-alerts'],
+    queryFn: async () => {
+      try {
+        const res = await getAlerts({ status: 'open', limit: 100 })
+        const alerts = res.data?.alerts || res.data || []
+        return Array.isArray(alerts) ? alerts.length : 0
+      } catch {
+        return 0
+      }
+    },
+    refetchInterval: 30_000,
+    staleTime: 20_000,
+  })
 
   const handleLogout = () => {
     logout()
@@ -51,7 +69,12 @@ export default function Sidebar() {
             }
           >
             <item.icon />
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            {item.to === '/alerts' && openAlertCount > 0 && (
+              <span className="ml-auto bg-[#ef4444] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                {openAlertCount > 99 ? '99+' : openAlertCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

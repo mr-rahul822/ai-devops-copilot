@@ -13,9 +13,12 @@ Endpoints:
 
 import uuid
 import logging
+import os
+import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,6 +45,53 @@ from src.middleware.verify_token import verify_token
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/actions", tags=["actions"])
+
+# ── AI Engine callback config ────────────────────────────────────────────────
+AI_ENGINE_URL = os.getenv("AI_ENGINE_URL", "http://ai-engine:8002")
+INTERNAL_SECRET = os.getenv("INTERNAL_SECRET", "devops-copilot-internal-2026")
+
+
+async def _notify_ai_engine(action: Action, result: dict, success: bool):
+    """
+    Fire-and-forget callback to ai-engine after action completes.
+    Embeds the outcome into Pinecone RAG for future diagnosis improvement.
+    Never raises — failure is logged and ignored.
+    """
+    if not action.incident_id:
+        return  # Only learn from AI-recommended actions
+
+    payload = {
+        "incident_id": str(action.incident_id),
+        "service_name": action.target_service or "unknown",
+        "alert_type": action.params.get("alert_type", "UNKNOWN") if action.params else "UNKNOWN",
+        "action_taken": action.action_type,
+        "action_target": action.target_service,
+        "success": success,
+        "outcome_message": result.get("message") or result.get("output") or str(result),
+        "user_id": str(action.user_id),
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                f"{AI_ENGINE_URL}/ai/learn",
+                json=payload,
+                headers={"X-Internal-Secret": INTERNAL_SECRET},
+            )
+            if resp.status_code == 200:
+                logger.info(
+                    "AI Engine learned from action %s (success=%s)",
+                    action.id, success
+                )
+            else:
+                logger.warning(
+                    "AI Engine learn callback returned %d for action %s",
+                    resp.status_code, action.id
+                )
+    except Exception as exc:
+        logger.warning(
+            "Failed to notify AI Engine of action outcome (non-critical): %s", exc
+        )
 
 
 # ── Helper: serialize UUIDs for JSON responses ────────────────────────────────
@@ -140,6 +190,10 @@ async def _execute_action(action: Action, db: AsyncSession) -> dict:
                 db=db,
             )
 
+        # Notify AI Engine of outcome (fire-and-forget — never blocks the response)
+        success = (action.status == "COMPLETED")
+        asyncio.create_task(_notify_ai_engine(action, result or {}, success))
+
         return result
 
     except Exception as e:
@@ -154,6 +208,10 @@ async def _execute_action(action: Action, db: AsyncSession) -> dict:
             detail=f"Exception: {str(e)}",
             db=db,
         )
+
+        # Notify AI Engine even on exceptions
+        asyncio.create_task(_notify_ai_engine(action, {"message": str(e)}, False))
+
         raise
 
 

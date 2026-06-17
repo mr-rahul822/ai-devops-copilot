@@ -143,6 +143,7 @@ async def resolve_incident(
         "resolution": body.resolution,
         "severity": row.severity or "",
         "resolved_at": row.resolved_at.isoformat() if row.resolved_at else "",
+        "source": "user_resolved",
     }
 
     await vector_store.upsert_incident(str(row.id), embed_text, metadata)

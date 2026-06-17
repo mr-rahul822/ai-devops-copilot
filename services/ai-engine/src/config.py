@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     auth_service_url: str = "http://auth-service:3001"
     jwt_secret: str = ""
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    internal_secret: str = "devops-copilot-internal-2026"
 
     class Config:
         env_file = ".env"

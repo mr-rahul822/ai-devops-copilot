@@ -105,11 +105,13 @@ from src.routes.diagnose import router as diagnose_router
 from src.routes.chat import router as chat_router
 from src.routes.incidents import router as incidents_router
 from src.routes.analyze import router as analyze_router
+from src.routes.learn import router as learn_router
 
 app.include_router(diagnose_router)
 app.include_router(chat_router)
 app.include_router(incidents_router)
 app.include_router(analyze_router, prefix="/ai")
+app.include_router(learn_router)
 
 
 # ── Health check ─────────────────────────────────────────────────────────

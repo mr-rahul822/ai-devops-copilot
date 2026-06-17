@@ -63,6 +63,11 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotMsg, setForgotMsg] = useState({ type: '', text: '' })
+
   // MFA state
   const [mfaRequired, setMfaRequired] = useState(false)
   const [tempToken, setTempToken] = useState('')
@@ -194,6 +199,24 @@ export default function Login() {
     setMfaCode(next)
     const lastFilledIndex = Math.min(pasted.length, 5)
     mfaInputs.current[lastFilledIndex]?.focus()
+  }
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) {
+      setForgotMsg({ type: 'error', text: 'Please enter your email.' })
+      return
+    }
+    setForgotLoading(true)
+    setForgotMsg({ type: '', text: '' })
+    try {
+      const { forgotPassword } = await import('../api/auth')
+      await forgotPassword(forgotEmail)
+      setForgotMsg({ type: 'success', text: 'If an account exists with this email, a reset link has been sent. Check your console in development mode.' })
+    } catch (err) {
+      setForgotMsg({ type: 'error', text: err?.response?.data?.error || 'Something went wrong.' })
+    } finally {
+      setForgotLoading(false)
+    }
   }
 
   // ── Main Content Components ──────────────────────────────────────────────
@@ -382,10 +405,11 @@ export default function Login() {
               <img src="/logo.png" alt="Cloudy Bro" className="w-16 h-16" />
             </div>
             <h2 className="text-2xl mb-1 font-extrabold text-white tracking-tight text-center">
-              {mfaRequired ? 'Two-Factor Auth' : authTab === 'login' ? 'Welcome back' : 'Create an account'}
+              {mfaRequired ? 'Two-Factor Auth' : authTab === 'forgot' ? 'Reset Password' : authTab === 'login' ? 'Welcome back' : 'Create an account'}
             </h2>
             <p className="text-[#94a3b8] text-sm text-center">
               {mfaRequired ? (!useBackup ? "Enter the 6-digit code from your authenticator app" : "Enter one of your backup codes") :
+                authTab === 'forgot' ? 'Enter your email and we\'ll send a reset link.' :
                 authTab === 'login' ? 'Sign in to your Cloudy Bro control plane' :
                   step === 1 ? 'Step 1: Account Setup' : 'Step 2: Profile Details'}
             </p>
@@ -434,6 +458,43 @@ export default function Login() {
             </div>
           ) : (
             <div className="animate-[fadeIn_0.3s_ease-out]">
+
+              {authTab === 'forgot' ? (
+                <div className="space-y-5">
+                  {forgotMsg.text && (
+                    <div className={`p-3 rounded-lg text-[13px] ${forgotMsg.type === 'success' ? 'bg-green-900/20 border border-green-800 text-green-400' : 'bg-red-900/20 border border-red-800 text-red-400'}`}>
+                      {forgotMsg.text}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-bold text-[#e2e8f0] mb-2">Email address</label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      className="w-full px-4 py-3 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#3b82f6] transition-all"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleForgotPassword}
+                    disabled={forgotLoading}
+                    className="w-full py-3.5 bg-[#3b82f6] text-white font-bold text-sm rounded-lg hover:bg-[#2563eb] disabled:opacity-50 transition-colors shadow-lg shadow-blue-500/20"
+                  >
+                    {forgotLoading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+
+                  <button
+                    onClick={() => { setAuthTab('login'); setForgotMsg({ type: '', text: '' }) }}
+                    className="w-full text-[13px] text-[#94a3b8] hover:text-white bg-transparent font-medium transition-colors"
+                  >
+                    ← Back to Login
+                  </button>
+                </div>
+              ) : (
+                <>
               <div className="flex border-b border-[#334155] mb-8 bg-[#0f172a] rounded-t-lg">
                 <button
                   id="tab-login"
@@ -463,7 +524,7 @@ export default function Login() {
                     <div>
                       <label className="block text-sm font-bold text-[#e2e8f0] mb-2">Password</label>
                       <input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="w-full px-4 py-3 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#3b82f6] transition-all" />
-                      {authTab === 'login' && <div className="text-right mt-2"><a href="#" className="text-xs font-bold text-[#3b82f6] hover:underline">Forgot password?</a></div>}
+                      {authTab === 'login' && <div className="text-right mt-2"><button type="button" onClick={() => { setAuthTab('forgot'); setForgotEmail(email); setError('') }} className="text-xs font-bold text-[#3b82f6] hover:underline bg-transparent">Forgot password?</button></div>}
                     </div>
                   </>
                 )}
@@ -497,6 +558,8 @@ export default function Login() {
                   <p className="text-[#64748b] text-[10px] font-mono">AES-256 · MFA · SOC2</p>
                 </div>
               </form>
+                </>
+              )}
             </div>
           )}
         </div>

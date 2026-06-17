@@ -77,6 +77,8 @@ async def _verify_token(authorization: str) -> dict:
         raise HTTPException(status_code=503, detail="Auth service unreachable.")
     if resp.status_code == 401:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    if resp.status_code == 404:
+        raise HTTPException(status_code=401, detail="User session expired. Please log in again.")
     if resp.status_code != 200:
         raise HTTPException(status_code=503, detail="Auth service error.")
     return resp.json()
@@ -104,66 +106,145 @@ def _friendly_error(exc: ClientError, fallback: str = "") -> str:
 
 
 def _assume_role(role_arn: str, external_id: str, region: str) -> boto3.Session:
+    """
+    Assume an IAM role via STS and return a boto3 session with temporary credentials.
     
+    Uses the PLATFORM's permanent IAM credentials (from env vars) to call STS.
+    Explicitly clears any stale AWS_SESSION_TOKEN to prevent boto3's credential
+    chain from mixing permanent keys with an expired session token.
+    """
+    import os
+    import time
+
     try:
         target_account_id = role_arn.split(":")[4]
     except (IndexError, AttributeError):
         target_account_id = ""
 
-    import os
-    aws_key = os.environ.get("AWS_ACCESS_KEY_ID") or None
-    aws_secret = os.environ.get("AWS_SECRET_ACCESS_KEY") or None
+    # Read the PLATFORM's permanent IAM keys from env vars.
+    # These are the long-lived credentials of the platform's own IAM user,
+    # used solely to call sts:AssumeRole on the customer's role.
+    aws_key = os.environ.get("AWS_ACCESS_KEY_ID", "").strip() or None
+    aws_secret = os.environ.get("AWS_SECRET_ACCESS_KEY", "").strip() or None
 
-    sts = boto3.client(
-        "sts",
-        aws_access_key_id=aws_key,
-        aws_secret_access_key=aws_secret,
-        region_name=region,
-    )
+    if not aws_key or not aws_secret:
+        logger.error(
+            "Platform AWS credentials not set. "
+            "Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in the environment."
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Platform AWS credentials are not configured. Please contact the administrator."
+        )
 
-    assume_params: dict = {
-        "RoleArn": role_arn,
-        "RoleSessionName": "DevOpsCopilot-Session",
-        "DurationSeconds": 3600,
-    }
-
-    if external_id:
-        assume_params["ExternalId"] = external_id
-
-    # ... baaki sab same rehne do
+    # CRITICAL: Clear any stale session token from the environment.
+    # boto3's credential chain checks AWS_SESSION_TOKEN even when explicit
+    # access_key/secret_key are provided. If a previous STS call left a
+    # session token in os.environ, boto3 will try to use it with the permanent
+    # keys, causing InvalidClientTokenId errors intermittently.
+    saved_session_token = os.environ.pop("AWS_SESSION_TOKEN", None)
 
     try:
-        assumed = sts.assume_role(**assume_params)
-    except ClientError as exc:
-        code = exc.response.get("Error", {}).get("Code", "")
-        msg = exc.response.get("Error", {}).get("Message", "")
-        logger.error(
-            "STS AssumeRole FAILED | code=%s | message=%s | role_arn=%s | has_external_id=%s | target_account=%s",
-            code, msg, role_arn, "ExternalId" in assume_params, target_account_id
+        sts = boto3.client(
+            "sts",
+            aws_access_key_id=aws_key,
+            aws_secret_access_key=aws_secret,
+            region_name=region,
         )
-        if code == "AccessDenied":
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Could not assume your IAM Role. Please verify: "
-                    f"1) The Trust Policy includes arn:aws:iam::{settings.platform_account_id}:root, "
-                    "2) The ExternalId in the Trust Policy matches exactly, "
-                    "3) The Role ARN is correct."
+
+        assume_params: dict = {
+            "RoleArn": role_arn,
+            "RoleSessionName": "DevOpsCopilot-Session",
+            "DurationSeconds": 3600,
+        }
+
+        if external_id:
+            assume_params["ExternalId"] = external_id
+
+        logger.info(
+            "STS AssumeRole attempt | role=%s | region=%s | has_external_id=%s | caller_key=%s...%s",
+            role_arn, region, bool(external_id),
+            aws_key[:4] if aws_key else "N/A",
+            aws_key[-4:] if aws_key else "N/A",
+        )
+
+        # Retry up to 2 times for transient STS errors
+        last_exc = None
+        for attempt in range(3):
+            try:
+                assumed = sts.assume_role(**assume_params)
+                break  # Success
+            except ClientError as exc:
+                code = exc.response.get("Error", {}).get("Code", "")
+                msg = exc.response.get("Error", {}).get("Message", "")
+                last_exc = exc
+
+                logger.warning(
+                    "STS AssumeRole attempt %d/%d FAILED | code=%s | message=%s | role_arn=%s",
+                    attempt + 1, 3, code, msg, role_arn
                 )
-            )
-        if code == "MalformedPolicyDocument":
-            raise HTTPException(
-                status_code=400,
-                detail="The IAM Role's Trust Policy is malformed. Please copy the exact JSON from Step 1."
-            )
-        raise HTTPException(status_code=400, detail=f"STS AssumeRole failed: {code} — {msg}")
+
+                # Only retry on transient errors, not permanent auth failures
+                if code in ("AccessDenied", "MalformedPolicyDocument"):
+                    break  # Don't retry — these are configuration errors
+                if code in ("InvalidClientTokenId", "SignatureDoesNotMatch"):
+                    # Transient — could be credential propagation delay
+                    if attempt < 2:
+                        time.sleep(1)
+                        # Recreate STS client to force fresh credential resolution
+                        sts = boto3.client(
+                            "sts",
+                            aws_access_key_id=aws_key,
+                            aws_secret_access_key=aws_secret,
+                            region_name=region,
+                        )
+                        continue
+                break  # Unknown error — don't retry
+        else:
+            # All retries exhausted — raise last exception
+            if last_exc:
+                raise last_exc
+
+        # Handle the exception from the loop if we broke out due to error
+        if last_exc and 'assumed' not in dir():
+            exc = last_exc
+            code = exc.response.get("Error", {}).get("Code", "")
+            msg = exc.response.get("Error", {}).get("Message", "")
+
+            if code == "AccessDenied":
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Could not assume your IAM Role. Please verify: "
+                        f"1) The Trust Policy includes arn:aws:iam::{settings.platform_account_id}:root, "
+                        "2) The ExternalId in the Trust Policy matches exactly, "
+                        "3) The Role ARN is correct."
+                    )
+                )
+            if code == "MalformedPolicyDocument":
+                raise HTTPException(
+                    status_code=400,
+                    detail="The IAM Role's Trust Policy is malformed. Please copy the exact JSON from Step 1."
+                )
+            raise HTTPException(status_code=400, detail=f"STS AssumeRole failed: {code} — {msg}")
+
+    except HTTPException:
+        raise
     except EndpointConnectionError:
         raise HTTPException(status_code=400, detail="Could not reach AWS. Please check your internet connection.")
     except Exception as exc:
         logger.error("STS AssumeRole unexpected error: %s", exc, exc_info=True)
         raise HTTPException(status_code=400, detail=f"Could not assume role: {str(exc)}")
+    finally:
+        # Restore session token if it was set before (for other services)
+        if saved_session_token:
+            os.environ["AWS_SESSION_TOKEN"] = saved_session_token
 
     creds = assumed["Credentials"]
+    logger.info(
+        "STS AssumeRole SUCCESS | role=%s | account=%s | expires=%s",
+        role_arn, target_account_id, creds.get("Expiration", "N/A")
+    )
     return boto3.Session(
         aws_access_key_id=creds["AccessKeyId"],
         aws_secret_access_key=creds["SecretAccessKey"],

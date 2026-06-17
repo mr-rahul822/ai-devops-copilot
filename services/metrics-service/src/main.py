@@ -22,6 +22,80 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+
+# ---------------------------------------------------------------------------
+# Restore AWS session on startup
+# ---------------------------------------------------------------------------
+
+async def _restore_cloud_session():
+    """
+    On startup, check if a cloud connection was previously established
+    (saved in cloud_credentials table). If so, re-assume the IAM role to
+    get fresh temporary credentials and populate `settings` before the
+    scheduler starts.
+
+    This prevents the scheduler from running with stale/empty credentials
+    after a container restart — which previously caused
+    `UnauthorizedOperation: ec2:DescribeInstances` errors on every tick.
+
+    Safe to call even if no cloud account was ever connected — it's a
+    no-op in that case (settings.aws_access_key_id remains whatever the
+    base .env credentials are, and the scheduler's existing check for
+    "no running instances" / empty credentials handles that gracefully).
+    """
+    from sqlalchemy import select
+    from src.database import AsyncSessionLocal
+    from src.routes.onboarding import CloudCredential, _assume_role
+
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(CloudCredential).where(
+                    CloudCredential.provider == "aws",
+                    CloudCredential.status == "connected",
+                )
+            )
+            cred = result.scalars().first()
+
+            if not cred:
+                logger.info("No saved cloud connection found — scheduler will start without AWS credentials.")
+                return
+
+            logger.info(
+                "Found saved AWS connection (role_arn=%s, region=%s) — re-assuming role to restore credentials...",
+                cred.role_arn, cred.region,
+            )
+
+            assumed_session = _assume_role(cred.role_arn, cred.external_id, cred.region)
+            assumed_creds = assumed_session.get_credentials().get_frozen_credentials()
+
+            settings.aws_role_arn = cred.role_arn
+            settings.aws_access_key_id = assumed_creds.access_key
+            settings.aws_secret_access_key = assumed_creds.secret_key
+            settings.aws_session_token = assumed_creds.token
+            settings.aws_default_region = cred.region
+
+            # Update last_sync_at and expiry to reflect the fresh credentials
+            from datetime import datetime, timedelta
+            cred.last_sync_at = datetime.utcnow()
+            cred.temp_credentials_expire_at = datetime.utcnow() + timedelta(hours=1)
+            await session.commit()
+
+            logger.info("AWS session restored successfully on startup — scheduler will use temporary role credentials.")
+
+    except Exception as exc:
+        # Never let a credential-restore failure block the whole service from starting.
+        # Log it clearly so it's visible in `docker logs`, but continue startup —
+        # the scheduler will simply log its own "no running instances" / auth errors
+        # if credentials truly aren't usable, same as before this fix.
+        logger.error(
+            "Failed to restore AWS session on startup: %s. "
+            "Scheduler will start without valid AWS credentials — "
+            "reconnect via Cloud Configuration if metrics don't appear.",
+            exc,
+        )
+
+
 # ---------------------------------------------------------------------------
 # FastAPI lifespan — startup + shutdown
 # ---------------------------------------------------------------------------
@@ -56,17 +130,15 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("cloud_credentials migration skipped: %s", exc)
 
-    # 2. Start Kafka Producer
+    # 2. Restore AWS session from saved cloud_credentials (if any) —
+    #    must happen BEFORE the scheduler starts so the first tick has
+    #    valid (re-assumed) temporary credentials instead of stale/empty ones.
+    await _restore_cloud_session()
+
+    # 3. Start Kafka Producer
     await start_producer()
 
-    # Load and refresh cloud credentials if connected
-    try:
-        from src.scheduler import _refresh_credentials
-        await _refresh_credentials()
-    except Exception as exc:
-        logger.warning("Initial credential load failed: %s", exc)
-
-    # 3. Start background scheduler
+    # 4. Start background scheduler
     start_scheduler(interval_seconds=settings.collection_interval_seconds)
 
     yield  # app is live and serving requests here
