@@ -5,14 +5,9 @@ import { getAlerts } from '../../api/alerts'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: GridIcon },
-  { to: '/clusters', label: 'Infrastructure', icon: ServerIcon },
-  { to: '/metrics', label: 'Metrics', icon: ChartIcon },
   { to: '/alerts', label: 'Alerts', icon: BellIcon },
-  { to: '/logs', label: 'Logs Explorer', icon: DocumentIcon },
   { to: '/insights', label: 'AI Insights', icon: SparklesIcon },
   { to: '/actions', label: 'Actions', icon: LightningIcon },
-  { to: '/multi-cloud', label: 'Multi-Cloud Manager', icon: CloudIcon },
-  { to: '/cost', label: 'Cost Optimization', icon: PiggyIcon },
   { to: '/cloud-configuration', label: 'Cloud Configuration', icon: SettingsCloudIcon },
 ]
 

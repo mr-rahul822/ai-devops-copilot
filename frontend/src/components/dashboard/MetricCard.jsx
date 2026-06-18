@@ -3,7 +3,7 @@ import { AreaChart, Area, LineChart, Line, ResponsiveContainer } from 'recharts'
 
 export default function MetricCard({ type, data, serviceFilter }) {
   // Common container styling
-  const containerClass = "bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between shadow-sm"
+  const containerClass = "bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-xl p-4 flex flex-col justify-between shadow-sm"
 
   // Process data based on type
   const processedData = useMemo(() => {
@@ -59,10 +59,13 @@ export default function MetricCard({ type, data, serviceFilter }) {
       <div className={containerClass}>
         <div>
           <div className="flex justify-between items-start mb-1">
-            <span className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider">CPU Usage</span>
-            <span className="text-lg font-bold text-white">{latest.cpu.toFixed(1)}%</span>
+            <span className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider">CPU Usage</span>
+            <span className="text-lg font-bold text-gray-800 dark:text-white">{latest.cpu.toFixed(1)}%</span>
           </div>
-          <div className="text-[11px] text-[#10b981] mb-3">▲ +5.2% from last hour</div>
+          <div className="text-[11px] text-[#10b981] mb-3 flex items-center gap-1 font-semibold">
+            <svg className="w-3 h-3 text-[#10b981] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+            +5.2% from last hour
+          </div>
         </div>
         
         <div className="h-[80px] w-full mb-3">
@@ -79,10 +82,10 @@ export default function MetricCard({ type, data, serviceFilter }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="space-y-1 text-[11px] text-[#94a3b8]">
-          <div className="flex justify-between"><span>Peak:</span> <span className="text-white">95% at 15:59</span></div>
-          <div className="flex justify-between"><span>Avg:</span> <span className="text-white">{avg.toFixed(1)}%</span></div>
-          <div className="flex justify-between"><span>Services &gt; 80%:</span> <span className="text-amber-500">1</span></div>
+        <div className="space-y-1 text-[11px] text-gray-500 dark:text-[#94a3b8]">
+          <div className="flex justify-between"><span>Peak:</span> <span className="text-gray-800 dark:text-white">95% at 15:59</span></div>
+          <div className="flex justify-between"><span>Avg:</span> <span className="text-gray-800 dark:text-white">{avg.toFixed(1)}%</span></div>
+          <div className="flex justify-between"><span>Services &gt; 80%:</span> <span className="text-amber-500 font-bold">1</span></div>
         </div>
       </div>
     )
@@ -93,10 +96,13 @@ export default function MetricCard({ type, data, serviceFilter }) {
       <div className={containerClass}>
         <div>
           <div className="flex justify-between items-start mb-1">
-            <span className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider">Memory Usage</span>
-            <span className="text-lg font-bold text-white">{latest.ram.toFixed(1)}%</span>
+            <span className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider">Memory Usage</span>
+            <span className="text-lg font-bold text-gray-800 dark:text-white">{latest.ram.toFixed(1)}%</span>
           </div>
-          <div className="text-[11px] text-[#10b981] mb-3">▼ -1.1% stable</div>
+          <div className="text-[11px] text-[#10b981] mb-3 flex items-center gap-1 font-semibold">
+            <svg className="w-3 h-3 text-[#10b981] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            -1.1% stable
+          </div>
         </div>
         
         <div className="h-[80px] w-full mb-3">
@@ -113,10 +119,10 @@ export default function MetricCard({ type, data, serviceFilter }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="space-y-1 text-[11px] text-[#94a3b8]">
-          <div className="flex justify-between"><span>Peak:</span> <span className="text-white">68% at 15:45</span></div>
-          <div className="flex justify-between"><span>Avg:</span> <span className="text-white">51.2%</span></div>
-          <div className="flex justify-between"><span>Warning level:</span> <span className="text-white">75%</span></div>
+        <div className="space-y-1 text-[11px] text-gray-500 dark:text-[#94a3b8]">
+          <div className="flex justify-between"><span>Peak:</span> <span className="text-gray-800 dark:text-white">68% at 15:45</span></div>
+          <div className="flex justify-between"><span>Avg:</span> <span className="text-gray-800 dark:text-white">51.2%</span></div>
+          <div className="flex justify-between"><span>Warning level:</span> <span className="text-gray-800 dark:text-white">75%</span></div>
         </div>
       </div>
     )
@@ -130,24 +136,25 @@ export default function MetricCard({ type, data, serviceFilter }) {
       <div className={containerClass}>
         <div>
           <div className="flex justify-between items-start mb-1">
-            <span className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider">Disk Usage</span>
-            <span className="text-lg font-bold text-white">{diskVal.toFixed(1)}%</span>
+            <span className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider">Disk Usage</span>
+            <span className="text-lg font-bold text-gray-800 dark:text-white">{diskVal.toFixed(1)}%</span>
           </div>
-          <div className="text-[11px] text-[#94a3b8] mb-3 flex items-center gap-1">
-            <span>→</span> Stable {isZero && <span className="ml-1 px-1 bg-[#334155] rounded text-[9px]">(Estimated)</span>}
+          <div className="text-[11px] text-gray-500 dark:text-[#94a3b8] mb-3 flex items-center gap-1 font-semibold">
+            <svg className="w-3 h-3 text-[#94a3b8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+            Stable {isZero && <span className="ml-1 px-1 bg-gray-100 dark:bg-[#334155] text-gray-500 dark:text-gray-400 rounded text-[9px]">(Estimated)</span>}
           </div>
         </div>
         
         <div className="h-[80px] w-full mb-3 flex flex-col justify-center">
-          <div className="w-full bg-[#0f172a] rounded-full h-3 mb-2 border border-[#334155] overflow-hidden">
+          <div className="w-full bg-gray-100 dark:bg-[#0f172a] rounded-full h-3 mb-2 border border-gray-200 dark:border-[#334155] overflow-hidden">
             <div className="bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] h-full rounded-full" style={{ width: `${diskVal}%` }}></div>
           </div>
         </div>
 
-        <div className="space-y-1 text-[11px] text-[#94a3b8]">
-          <div className="flex justify-between"><span>Used:</span> <span className="text-white">1.5 GB</span></div>
-          <div className="flex justify-between"><span>Free:</span> <span className="text-white">6.5 GB</span></div>
-          <div className="flex justify-between"><span>Total:</span> <span className="text-white">8 GB</span></div>
+        <div className="space-y-1 text-[11px] text-gray-500 dark:text-[#94a3b8]">
+          <div className="flex justify-between"><span>Used:</span> <span className="text-gray-800 dark:text-white">1.5 GB</span></div>
+          <div className="flex justify-between"><span>Free:</span> <span className="text-gray-800 dark:text-white">6.5 GB</span></div>
+          <div className="flex justify-between"><span>Total:</span> <span className="text-gray-800 dark:text-white">8 GB</span></div>
         </div>
       </div>
     )
@@ -158,13 +165,17 @@ export default function MetricCard({ type, data, serviceFilter }) {
       <div className={containerClass}>
         <div>
           <div className="flex justify-between items-start mb-1">
-            <span className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider">Network</span>
+            <span className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider">Network</span>
             <span className="text-[12px] font-bold text-[#10b981] flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-pulse"></span> Live
             </span>
           </div>
-          <div className="text-[11px] text-white mb-3 font-mono">
-            ↑ {(latest.networkMbs || 24).toFixed(0)} MB/s &nbsp;&nbsp; ↓ {(latest.networkReqs || 180).toFixed(0)} req/s
+          <div className="text-[11px] text-gray-700 dark:text-white mb-3 font-mono flex items-center gap-2">
+            <svg className="w-3 h-3 text-[#10b981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+            {(latest.networkMbs || 24).toFixed(0)} MB/s
+            <span className="text-gray-300 dark:text-gray-600">|</span>
+            <svg className="w-3 h-3 text-[#3b82f6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            {(latest.networkReqs || 180).toFixed(0)} req/s
           </div>
         </div>
         
@@ -172,14 +183,14 @@ export default function MetricCard({ type, data, serviceFilter }) {
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={processedData}>
               <Line type="monotone" dataKey="networkReqs" stroke="#06b6d4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-              <Line type="monotone" dataKey="networkMbs" stroke="#ffffff" strokeWidth={1.5} dot={false} strokeOpacity={0.5} isAnimationActive={false} />
+              <Line type="monotone" dataKey="networkMbs" stroke="var(--chart-white-line)" strokeWidth={1.5} dot={false} strokeOpacity={0.5} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="space-y-1 text-[11px] text-[#94a3b8]">
-          <div className="flex justify-between"><span>Total today:</span> <span className="text-white">2.4 GB</span></div>
-          <div className="flex justify-between"><span>Peak:</span> <span className="text-white">260 MB/s</span></div>
+        <div className="space-y-1 text-[11px] text-gray-500 dark:text-[#94a3b8]">
+          <div className="flex justify-between"><span>Total today:</span> <span className="text-gray-800 dark:text-white">2.4 GB</span></div>
+          <div className="flex justify-between"><span>Peak:</span> <span className="text-gray-800 dark:text-white">260 MB/s</span></div>
         </div>
       </div>
     )

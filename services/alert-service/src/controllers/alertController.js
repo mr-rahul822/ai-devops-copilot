@@ -16,9 +16,8 @@ const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).cat
 
 const getAlerts = wrap(async (req, res) => {
   const { status, severity } = req.query;
-  const user_id = req.query.user_id || req.user?.userId || '00000000-0000-0000-0000-000000000001';
 
-  const alerts = await alertService.getAlerts({ user_id, status, severity });
+  const alerts = await alertService.getAlerts({ status, severity });
   return res.status(200).json({ alerts, count: alerts.length });
 });
 
@@ -51,9 +50,7 @@ const resolveAlert = wrap(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const getSummary = wrap(async (req, res) => {
-  const user_id = req.query.user_id || req.user?.userId || '00000000-0000-0000-0000-000000000001';
-
-  const summary = await alertService.getSummary(user_id);
+  const summary = await alertService.getSummary();
   return res.status(200).json(summary);
 });
 

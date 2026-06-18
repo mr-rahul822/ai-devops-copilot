@@ -32,45 +32,19 @@ export default function Header() {
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-5">
-        <button className="flex items-center gap-2 border border-[#e2e8f0] dark:border-gray-600 rounded px-3 py-1.5 text-[13px] font-medium text-[#475569] dark:text-gray-300 hover:bg-[#f8fafc] dark:hover:bg-gray-800">
-          Last 24 Hours
+      <div className="flex items-center gap-3">
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleDark}
+          className="text-[#64748b] dark:text-gray-400 hover:text-[#0f172a] dark:hover:text-gray-200 transition-colors p-1.5 rounded-md hover:bg-[#f1f5f9] dark:hover:bg-gray-800"
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? <SunIcon /> : <MoonIcon />}
         </button>
 
-        <div className="flex items-center gap-3 border-l border-[#e2e8f0] dark:border-gray-700 pl-5">
-          {/* Dark mode toggle */}
-          <button
-            onClick={toggleDark}
-            className="text-[#64748b] dark:text-gray-400 hover:text-[#0f172a] dark:hover:text-gray-200 transition-colors p-1 rounded-md hover:bg-[#f1f5f9] dark:hover:bg-gray-800"
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? <SunIcon /> : <MoonIcon />}
-          </button>
-
-          <button
-            onClick={() => navigate('/alerts')}
-            className="relative text-[#64748b] dark:text-gray-400 hover:text-[#0f172a] dark:hover:text-gray-200 transition-colors"
-          >
-            <BellIcon />
-            {openAlertCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-[14px] h-[14px] bg-[#ef4444] rounded-full text-white text-[9px] font-bold flex items-center justify-center border-2 border-white dark:border-gray-900">
-                {openAlertCount > 9 ? '9+' : openAlertCount}
-              </span>
-            )}
-          </button>
-          
-          <button className="text-[#64748b] dark:text-gray-400 hover:text-[#0f172a] dark:hover:text-gray-200 transition-colors">
-            <HistoryIcon />
-          </button>
-
-          <button className="text-[#64748b] dark:text-gray-400 hover:text-[#0f172a] dark:hover:text-gray-200 transition-colors">
-            <HelpCircleIcon />
-          </button>
-
-          {/* Avatar */}
-          <div className="ml-2 w-8 h-8 rounded-full bg-[#1e293b] dark:bg-[#2563eb] text-white flex items-center justify-center text-[13px] font-semibold cursor-default">
-            {initial}
-          </div>
+        {/* Avatar */}
+        <div className="ml-1 w-8 h-8 rounded-full bg-[#1e293b] dark:bg-[#2563eb] text-white flex items-center justify-center text-[13px] font-semibold cursor-default">
+          {initial}
         </div>
       </div>
     </header>

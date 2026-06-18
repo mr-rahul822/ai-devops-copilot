@@ -11,3 +11,4 @@ pydantic-settings==2.3.0
 boto3==1.34.120
 aiokafka==0.11.0
 cryptography==42.0.5
+PyJWT==2.9.0

@@ -48,7 +48,26 @@ const LightningBackground = () => (
 )
 
 export default function Login() {
-  const [activeTab, setActiveTab] = useState('home')
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash || ''
+    if (hash === '#features') return 'features'
+    if (hash === '#pricing') return 'pricing'
+    if (hash === '#docs') return 'docs'
+    return 'home'
+  })
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash || ''
+      if (hash === '#features') setActiveTab('features')
+      else if (hash === '#pricing') setActiveTab('pricing')
+      else if (hash === '#docs') setActiveTab('docs')
+      else if (hash === '#home' || !hash) setActiveTab('home')
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
   const [isLoginOpen, setIsLoginOpen] = useState(false)
 
   // Auth State
@@ -221,139 +240,273 @@ export default function Login() {
 
   // ── Main Content Components ──────────────────────────────────────────────
 
+  // ── Main Content Components ──────────────────────────────────────────────
+
   const HomeContent = () => (
-    <div className="flex flex-col items-center justify-center text-center animate-[fadeIn_0.5s_ease-out] relative z-10 pt-20">
-      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-8">
-        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-        Cloudy Bro v4.0 is Live
-      </div>
-      <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight max-w-4xl">
-        Self-Healing Cloud Infrastructure
-      </h1>
-      <p className="text-lg md:text-xl text-[#94a3b8] max-w-2xl mb-12 leading-relaxed">
-        Your 24/7 DevOps Guardian. We monitor, diagnose, and automatically resolve infrastructure anomalies across AWS, Azure, and GCP using multi-agent AI.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4">
-        <button
-          onClick={() => setIsLoginOpen(true)}
-          className="px-8 py-4 bg-[#3b82f6] text-white rounded-lg font-bold hover:bg-[#2563eb] transition-colors shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
-        >
-          Start Free Trial
-        </button>
-        <button
-          onClick={() => setActiveTab('features')}
-          className="px-8 py-4 bg-[#1e293b] border border-[#334155] text-white rounded-lg font-bold hover:bg-[#334155] transition-colors"
-        >
-          See How It Works
-        </button>
+    <div className="w-full flex flex-col items-center">
+      <div className="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pt-20 pb-20 px-4 w-full">
+        {/* Hero Content */}
+        <div className="flex flex-col gap-8 z-10 text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel w-fit">
+            <span className="w-2 h-2 rounded-full bg-surface-tint animate-pulse"></span>
+            <span className="font-code-sm text-code-sm text-surface-tint">v2.0 Beta Live</span>
+          </div>
+          <h1 className="font-display-lg text-display-lg text-on-surface">
+            DevOps on <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary-container">Autopilot</span>
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant max-w-lg text-lg">
+            AI-driven monitoring, instant incident remediation, and autonomous infrastructure optimization. Take command of your systems without writing another script.
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <button 
+              onClick={() => { setAuthTab('register'); setIsLoginOpen(true) }}
+              className="px-8 py-3 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold glow-primary transition-all hover:scale-105 cursor-pointer"
+            >
+              Start for Free
+            </button>
+            <button className="px-8 py-3 rounded-full glass-panel text-on-surface font-label-caps text-label-caps hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
+              Watch Demo
+            </button>
+          </div>
+        </div>
+
+        {/* Hero Visual (Terminal Mockup) */}
+        <div className="z-10 relative">
+          <div className="glass-panel rounded-24px p-1 glow-primary transform hover:scale-[1.01] transition-transform duration-700 ease-out">
+            <div className="rounded-[22px] terminal-bg overflow-hidden border border-white/5 shadow-2xl">
+              {/* Terminal Header */}
+              <div className="bg-surface-variant/50 px-4 py-2 border-b border-white/10 flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-error"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#10b981]"></div>
+                </div>
+                <div className="flex-1 text-center font-code-sm text-code-sm text-on-surface-variant/70">
+                  cloudybro@cluster-alpha:~
+                </div>
+              </div>
+              {/* Terminal Body */}
+              <div className="p-6 font-code-sm text-code-sm flex flex-col gap-3 min-h-[300px] text-left">
+                <div className="text-on-surface-variant">
+                  <span className="text-surface-tint">❯</span> analyzing load spikes...
+                </div>
+                <div className="text-on-surface-variant">
+                  <span className="text-surface-tint">❯</span> detecting anomaly in us-east-1...
+                </div>
+                <div className="text-primary mt-2 font-semibold">
+                  [ALERT] CPU usage &gt; 90% on api-gateway-03
+                </div>
+                <div className="text-on-surface-variant mt-2 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-surface-tint animate-spin" style={{ fontSize: '16px' }}>autorenew</span>
+                  AI Agent initiating auto-scaling...
+                </div>
+                <div className="text-[#10b981] mt-2 font-semibold">
+                  ✓ Provisioned 2 new instances successfully.
+                </div>
+                <div className="text-[#10b981] font-semibold">
+                  ✓ Traffic re-routed. System stable. Time to resolve: 1.2s.
+                </div>
+                <div className="text-surface-tint mt-4 animate-pulse">_</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-20 pt-10 border-t border-[#334155] w-full max-w-4xl flex flex-wrap justify-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-        <div className="flex items-center gap-2 text-xl font-bold font-mono"><span className="text-[#3b82f6]">AWS</span> Amazon Web Services</div>
-        <div className="flex items-center gap-2 text-xl font-bold font-mono"><span className="text-[#3b82f6]">GCP</span> Google Cloud</div>
-        <div className="flex items-center gap-2 text-xl font-bold font-mono"><span className="text-[#3b82f6]">AZR</span> Microsoft Azure</div>
+      {/* Trust Bar */}
+      <div className="w-full py-12 border-y border-white/5 bg-surface-dim/50 mt-10">
+        <div className="max-w-container-max mx-auto px-margin-desktop flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+          <div className="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">AWS</div>
+          <div className="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">GitHub</div>
+          <div className="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">Docker</div>
+          <div className="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">Kubernetes</div>
+          <div className="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">Terraform</div>
+        </div>
       </div>
     </div>
   )
 
   const FeaturesContent = () => (
-    <div className="max-w-5xl mx-auto w-full animate-[fadeIn_0.5s_ease-out] relative z-10 pt-10 pb-20">
+    <div className="max-w-container-max mx-auto w-full pt-10 pb-20 px-4">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-extrabold text-white mb-4">How Cloudy Bro Prevents Downtime</h2>
-        <p className="text-[#94a3b8] text-lg max-w-2xl mx-auto">A fully autonomous pipeline that watches your infrastructure 24/7.</p>
+        <h2 className="font-display-lg text-headline-lg md:text-display-lg text-on-surface mb-4">Command your Infrastructure</h2>
+        <p className="font-body-md text-on-surface-variant max-w-2xl mx-auto">Intelligent tools designed to anticipate failures before they happen.</p>
       </div>
-
-      <div className="space-y-12 relative before:absolute before:inset-0 before:ml-[50%] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[#3b82f6] before:to-transparent">
-
-        {/* Step 1 */}
-        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[#0f172a] bg-[#3b82f6] text-white font-bold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10">1</div>
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-6 rounded-xl border border-[#334155] bg-[#1e293b] floating-element">
-            <div className="text-[#3b82f6] font-mono text-xs mb-2">t=0s</div>
-            <h3 className="text-xl font-bold text-white mb-2">Anomaly Detected</h3>
-            <p className="text-[#94a3b8] text-sm">A sudden CPU spike occurs on the inventory-service container in AWS us-east-1.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Feature 1 */}
+        <div className="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-surface-tint">smart_toy</span>
           </div>
+          <h3 className="font-headline-lg text-[24px] text-on-surface mb-3 text-left">AI Root Cause</h3>
+          <p className="font-body-md text-on-surface-variant text-left">Instantly trace complex microservice failures down to the exact commit that broke the build.</p>
         </div>
-
-        {/* Step 2 */}
-        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[#0f172a] bg-[#3b82f6] text-white font-bold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10">2</div>
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-6 rounded-xl border border-[#334155] bg-[#1e293b] floating-element" style={{ animationDelay: '1s' }}>
-            <div className="text-[#3b82f6] font-mono text-xs mb-2">t=1.2s</div>
-            <h3 className="text-xl font-bold text-white mb-2">AI Diagnostics (Claude)</h3>
-            <p className="text-[#94a3b8] text-sm">The Claude LLM ingests the metrics and traces, identifying a rogue caching thread causing the spike.</p>
+        {/* Feature 2 */}
+        <div className="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-secondary">cloud_sync</span>
           </div>
+          <h3 className="font-headline-lg text-[24px] text-on-surface mb-3 text-left">Multi-Cloud Sync</h3>
+          <p className="font-body-md text-on-surface-variant text-left">Unified visibility across AWS, GCP, and Azure with zero configuration required.</p>
         </div>
-
-        {/* Step 3 */}
-        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[#0f172a] bg-[#3b82f6] text-white font-bold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_15px_rgba(59,130,246,0.5)] relative z-10">3</div>
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-6 rounded-xl border border-[#334155] bg-[#1e293b] floating-element" style={{ animationDelay: '2s' }}>
-            <div className="text-[#3b82f6] font-mono text-xs mb-2">t=3.5s</div>
-            <h3 className="text-xl font-bold text-white mb-2">Auto-Healing Triggered</h3>
-            <p className="text-[#94a3b8] text-sm">Action Hub executes a secure playbook to gracefully restart the pod without dropping active requests.</p>
+        {/* Feature 3 */}
+        <div className="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-surface-tint">monitoring</span>
           </div>
+          <h3 className="font-headline-lg text-[24px] text-on-surface mb-3 text-left">Predictive Metrics</h3>
+          <p className="font-body-md text-on-surface-variant text-left">Forecast resource exhaustion days before it impacts your end-users.</p>
         </div>
-
+        {/* Feature 4 */}
+        <div className="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-secondary">notifications_active</span>
+          </div>
+          <h3 className="font-headline-lg text-[24px] text-on-surface mb-3 text-left">Smart Alerts</h3>
+          <p className="font-body-md text-on-surface-variant text-left">Reduce alert fatigue. Only get notified when human intervention is actually required.</p>
+        </div>
+        {/* Feature 5 */}
+        <div className="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-surface-tint">build</span>
+          </div>
+          <h3 className="font-headline-lg text-[24px] text-on-surface mb-3 text-left">Auto-Remediation</h3>
+          <p className="font-body-md text-on-surface-variant text-left">Define self-healing policies that execute standard operating procedures automatically.</p>
+        </div>
+        {/* Feature 6 */}
+        <div className="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-secondary">security</span>
+          </div>
+          <h3 className="font-headline-lg text-[24px] text-on-surface mb-3 text-left">Shift-Left Security</h3>
+          <p className="font-body-md text-on-surface-variant text-left">Continuous vulnerability scanning embedded directly into your CI/CD pipelines.</p>
+        </div>
       </div>
     </div>
   )
 
   const PricingContent = () => (
-    <div className="max-w-6xl mx-auto w-full animate-[fadeIn_0.5s_ease-out] relative z-10 pt-10 pb-20">
+    <div className="max-w-container-max mx-auto w-full pt-10 pb-20 px-4">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-extrabold text-white mb-4">Transparent Pricing</h2>
-        <p className="text-[#94a3b8] text-lg max-w-2xl mx-auto">Start for free, scale when your infrastructure demands it.</p>
+        <h2 className="font-display-lg text-headline-lg md:text-display-lg text-on-surface mb-4">Simple, Transparent Pricing</h2>
+        <p className="font-body-md text-on-surface-variant max-w-2xl mx-auto">Scale your infrastructure without scaling your costs exponentially.</p>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Free */}
-        <div className="bg-[#1e293b] border border-[#334155] rounded-2xl p-8 flex flex-col">
-          <h3 className="text-xl font-bold text-white mb-2">Hobbyist</h3>
-          <p className="text-[#94a3b8] text-sm mb-6">For personal projects and testing.</p>
-          <div className="mb-8"><span className="text-4xl font-extrabold text-white">$0</span><span className="text-[#94a3b8]">/mo</span></div>
-          <ul className="space-y-4 text-sm text-[#cbd5e1] mb-8 flex-1">
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> 1 Cluster Support</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Basic Metrics (5m resolution)</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Email Alerts</li>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto">
+        {/* Starter Tier */}
+        <div className="glass-panel p-8 rounded-24px flex flex-col h-full text-left">
+          <div className="mb-8">
+            <h3 className="font-headline-lg text-[24px] text-on-surface mb-2">Starter</h3>
+            <div className="text-on-surface-variant text-sm mb-4">Perfect for hobby projects.</div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display-lg text-4xl text-on-surface">$0</span>
+              <span className="text-on-surface-variant">/mo</span>
+            </div>
+          </div>
+          <ul className="flex flex-col gap-4 mb-8 flex-1">
+            <li className="flex items-center gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              1 Cluster limit
+            </li>
+            <li className="flex items-center gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              Basic metrics
+            </li>
+            <li className="flex items-center gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              Community support
+            </li>
           </ul>
-          <button onClick={() => setIsLoginOpen(true)} className="w-full py-3 bg-[#334155] hover:bg-[#475569] text-white rounded-lg font-bold transition-colors">Start Free</button>
+          <button 
+            onClick={() => { setAuthTab('register'); setIsLoginOpen(true) }}
+            className="w-full py-3 rounded-full border border-white/20 text-on-surface font-label-caps text-label-caps hover:bg-white/5 transition-all cursor-pointer"
+          >
+            Get Started
+          </button>
         </div>
 
-        {/* Pro */}
-        <div className="bg-[#0f172a] border-2 border-[#3b82f6] rounded-2xl p-8 flex flex-col relative shadow-[0_0_30px_rgba(59,130,246,0.2)] scale-105">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#3b82f6] text-white px-3 py-1 rounded-full text-xs font-bold tracking-wider">MOST POPULAR</div>
-          <h3 className="text-xl font-bold text-white mb-2">Professional</h3>
-          <p className="text-[#94a3b8] text-sm mb-6">For growing teams and startups.</p>
-          <div className="mb-8"><span className="text-4xl font-extrabold text-white">$49</span><span className="text-[#94a3b8]">/mo</span></div>
-          <ul className="space-y-4 text-sm text-[#cbd5e1] mb-8 flex-1">
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-[#3b82f6]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> 5 Clusters Support</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-[#3b82f6]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> High-Res Metrics (1m)</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-[#3b82f6]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Slack & PagerDuty Integration</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-[#3b82f6]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Claude AI Diagnostics</li>
+        {/* Pro Tier (Highlighted) */}
+        <div className="glass-panel p-8 rounded-24px flex flex-col h-full border-surface-tint/50 glow-primary transform md:-translate-y-4 bg-surface-container-low/80 relative text-left">
+          <div className="absolute top-0 right-8 transform -translate-y-1/2 bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase">
+            Most Popular
+          </div>
+          <div className="mb-8">
+            <h3 className="font-headline-lg text-[24px] text-on-surface mb-2">Pro</h3>
+            <div className="text-on-surface-variant text-sm mb-4">For production workloads.</div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display-lg text-4xl text-on-surface">$29</span>
+              <span className="text-on-surface-variant">/mo</span>
+            </div>
+          </div>
+          <ul className="flex flex-col gap-4 mb-8 flex-1">
+            <li className="flex items-center gap-3 text-on-surface">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              Unlimited Clusters
+            </li>
+            <li className="flex items-center gap-3 text-on-surface">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              AI Auto-remediation
+            </li>
+            <li className="flex items-center gap-3 text-on-surface">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              Advanced Alerts
+            </li>
+            <li className="flex items-center gap-3 text-on-surface">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              Priority Support
+            </li>
           </ul>
-          <button onClick={() => setIsLoginOpen(true)} className="w-full py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-bold transition-colors">Start Trial</button>
+          <button 
+            onClick={() => { setAuthTab('register'); setIsLoginOpen(true) }}
+            className="w-full py-3 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold transition-all hover:scale-105 cursor-pointer"
+          >
+            Start 14-Day Trial
+          </button>
         </div>
 
-        {/* Enterprise */}
-        <div className="bg-[#1e293b] border border-[#334155] rounded-2xl p-8 flex flex-col">
-          <h3 className="text-xl font-bold text-white mb-2">Enterprise</h3>
-          <p className="text-[#94a3b8] text-sm mb-6">Mission-critical infrastructure.</p>
-          <div className="mb-8"><span className="text-4xl font-extrabold text-white">Custom</span></div>
-          <ul className="space-y-4 text-sm text-[#cbd5e1] mb-8 flex-1">
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Unlimited Clusters</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Auto-Healing Playbooks</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> SSO / SAML Authentication</li>
-            <li className="flex items-center gap-3"><svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Dedicated Account Manager</li>
+        {/* Enterprise Tier */}
+        <div className="glass-panel p-8 rounded-24px flex flex-col h-full text-left">
+          <div className="mb-8">
+            <h3 className="font-headline-lg text-[24px] text-on-surface mb-2">Enterprise</h3>
+            <div className="text-on-surface-variant text-sm mb-4">Custom needs &amp; compliance.</div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display-lg text-4xl text-on-surface">Custom</span>
+            </div>
+          </div>
+          <ul className="flex flex-col gap-4 mb-8 flex-1">
+            <li className="flex items-center gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              SSO &amp; SAML
+            </li>
+            <li className="flex items-center gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              Dedicated Instance
+            </li>
+            <li className="flex items-center gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-surface-tint text-sm">check</span>
+              Custom Models
+            </li>
           </ul>
-          <button className="w-full py-3 bg-[#334155] hover:bg-[#475569] text-white rounded-lg font-bold transition-colors">Contact Sales</button>
+          <button 
+            onClick={() => { setAuthTab('register'); setIsLoginOpen(true) }}
+            className="w-full py-3 rounded-full border border-white/20 text-on-surface font-label-caps text-label-caps hover:bg-white/5 transition-all cursor-pointer"
+          >
+            Contact Sales
+          </button>
         </div>
       </div>
     </div>
   )
 
   const DocsContent = () => (
-    <div className="max-w-3xl mx-auto w-full animate-[fadeIn_0.5s_ease-out] relative z-10 pt-10 pb-20">
+    <div className="max-w-3xl mx-auto w-full pt-10 pb-20 px-4 text-left">
       <div className="text-center mb-16">
         <h2 className="text-4xl font-extrabold text-white mb-4">Frequently Asked Questions</h2>
         <p className="text-[#94a3b8] text-lg">Everything you need to know about Cloudy Bro.</p>
@@ -366,7 +519,7 @@ export default function Login() {
           { q: "Can I self-host the platform?", a: "Yes. Cloudy Bro is designed as a microservices architecture using Docker Compose. Enterprise customers can deploy the entire stack on their own air-gapped infrastructure." },
           { q: "How do Auto-Healing Playbooks work?", a: "Playbooks are strict, pre-approved scripts (like restarting a pod or clearing a tmp folder). The AI recommends an action, but it requires explicit approval unless you configure an automated rule." }
         ].map((faq, i) => (
-          <div key={i} className="bg-[#1e293b] border border-[#334155] rounded-xl p-6">
+          <div key={i} className="glass-panel rounded-xl p-6">
             <h3 className="text-lg font-bold text-white mb-2">{faq.q}</h3>
             <p className="text-[#94a3b8] leading-relaxed">{faq.a}</p>
           </div>
@@ -388,11 +541,11 @@ export default function Login() {
       )}
 
       {/* Drawer */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[500px] bg-[#111827] border-l border-[#1e293b] shadow-2xl z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto ${isLoginOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-full sm:w-[500px] bg-surface-dim/95 backdrop-blur-xl border-l border-white/10 shadow-2xl z-50 transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto ${isLoginOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
         <button
           onClick={() => setIsLoginOpen(false)}
-          className="absolute top-6 right-6 p-2 text-[#94a3b8] hover:text-white bg-[#1e293b] rounded-full transition-colors"
+          className="absolute top-6 right-6 p-2 text-[#94a3b8] hover:text-white bg-[#1e293b] rounded-full transition-colors cursor-pointer"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
@@ -401,8 +554,8 @@ export default function Login() {
 
           <div className="flex flex-col items-center justify-center mb-10">
             {/* Enlarged Logo here */}
-            <div className="bg-[#0f172a] border border-[#1e293b] p-4 rounded-2xl shadow-lg mb-6">
-              <img src="/logo.png" alt="Cloudy Bro" className="w-16 h-16" />
+            <div className="bg-surface-container border border-white/10 p-4 rounded-2xl shadow-lg mb-6">
+              <img src="/logo.png" alt="Cloudy Bro" className="w-16 h-16 object-contain" />
             </div>
             <h2 className="text-2xl mb-1 font-extrabold text-white tracking-tight text-center">
               {mfaRequired ? 'Two-Factor Auth' : authTab === 'forgot' ? 'Reset Password' : authTab === 'login' ? 'Welcome back' : 'Create an account'}
@@ -427,7 +580,7 @@ export default function Login() {
                       onChange={(e) => handleMfaCodeChange(i, e.target.value)}
                       onKeyDown={(e) => handleMfaKeyDown(i, e)}
                       maxLength={1}
-                      className="w-12 h-14 text-center text-xl font-bold rounded-lg bg-[#0f172a] border border-[#334155] text-white focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] transition-all"
+                      className="w-12 h-14 text-center text-xl font-bold rounded-lg bg-surface-container-lowest border border-white/10 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     />
                   ))}
                 </div>
@@ -436,22 +589,22 @@ export default function Login() {
                   value={backupCode}
                   onChange={(e) => setBackupCode(e.target.value)}
                   placeholder="e.g., a1b2c3d4"
-                  className="w-full px-4 py-3.5 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white mb-8 text-center font-mono text-lg focus:outline-none focus:border-[#3b82f6] transition-all"
+                  className="w-full px-4 py-3.5 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white mb-8 text-center font-mono text-lg focus:outline-none focus:border-primary transition-all"
                 />
               )}
 
-              {error && <div className="bg-red-900/30 border border-red-800 text-red-400 text-sm px-4 py-3 rounded-lg mb-6 text-center">{error}</div>}
+              {error && <div className="bg-error-container/30 border border-error-container text-error text-sm px-4 py-3 rounded-lg mb-6 text-center">{error}</div>}
 
               <button
                 onClick={handleMfaSubmit}
                 disabled={loading}
-                className="w-full py-3.5 bg-[#3b82f6] text-white font-bold text-sm rounded-lg hover:bg-[#2563eb] disabled:opacity-50 transition-colors mb-6 shadow-lg shadow-blue-500/20"
+                className="w-full py-3.5 bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold rounded-lg transition-all hover:scale-102 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)] duration-200 mb-6"
               >
                 {loading ? 'Verifying...' : 'Verify →'}
               </button>
 
               <div className="flex justify-between text-sm">
-                <button onClick={() => { setUseBackup(!useBackup); setError('') }} className="text-[#3b82f6] hover:underline bg-transparent font-medium">
+                <button onClick={() => { setUseBackup(!useBackup); setError('') }} className="text-primary hover:underline bg-transparent font-medium cursor-pointer">
                   {useBackup ? 'Use authenticator code' : 'Use a backup code instead'}
                 </button>
               </div>
@@ -462,7 +615,7 @@ export default function Login() {
               {authTab === 'forgot' ? (
                 <div className="space-y-5">
                   {forgotMsg.text && (
-                    <div className={`p-3 rounded-lg text-[13px] ${forgotMsg.type === 'success' ? 'bg-green-900/20 border border-green-800 text-green-400' : 'bg-red-900/20 border border-red-800 text-red-400'}`}>
+                    <div className={`p-3 rounded-lg text-[13px] ${forgotMsg.type === 'success' ? 'bg-green-900/20 border border-green-800 text-green-400' : 'bg-error-container/30 border border-error-container text-error'}`}>
                       {forgotMsg.text}
                     </div>
                   )}
@@ -474,90 +627,90 @@ export default function Login() {
                       value={forgotEmail}
                       onChange={e => setForgotEmail(e.target.value)}
                       placeholder="you@company.com"
-                      className="w-full px-4 py-3 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#3b82f6] transition-all"
+                      className="w-full px-4 py-3 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white placeholder-outline focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
 
                   <button
                     onClick={handleForgotPassword}
                     disabled={forgotLoading}
-                    className="w-full py-3.5 bg-[#3b82f6] text-white font-bold text-sm rounded-lg hover:bg-[#2563eb] disabled:opacity-50 transition-colors shadow-lg shadow-blue-500/20"
+                    className="w-full py-3.5 bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold rounded-lg transition-all hover:scale-102 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)] duration-200"
                   >
                     {forgotLoading ? 'Sending...' : 'Send Reset Link'}
                   </button>
 
                   <button
                     onClick={() => { setAuthTab('login'); setForgotMsg({ type: '', text: '' }) }}
-                    className="w-full text-[13px] text-[#94a3b8] hover:text-white bg-transparent font-medium transition-colors"
+                    className="w-full text-[13px] text-[#94a3b8] hover:text-white bg-transparent font-medium transition-colors cursor-pointer"
                   >
                     ← Back to Login
                   </button>
                 </div>
               ) : (
                 <>
-              <div className="flex border-b border-[#334155] mb-8 bg-[#0f172a] rounded-t-lg">
-                <button
-                  id="tab-login"
-                  onClick={() => { setAuthTab('login'); setStep(1); setError('') }}
-                  className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${authTab === 'login' ? 'text-[#3b82f6] border-[#3b82f6]' : 'text-[#64748b] hover:text-white border-transparent'
-                    }`}
-                >
-                  Login
-                </button>
-                <button
-                  id="tab-register"
-                  onClick={() => { setAuthTab('register'); setError('') }}
-                  className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${authTab === 'register' ? 'text-[#3b82f6] border-[#3b82f6]' : 'text-[#64748b] hover:text-white border-transparent'
-                    }`}
-                >
-                  Register
-                </button>
-              </div>
-
-              <form noValidate onSubmit={authTab === 'login' ? handleSubmit : (step === 1 ? handleNextStep : handleSubmit)} className="space-y-5">
-                {(authTab === 'login' || (authTab === 'register' && step === 1)) && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-bold text-[#e2e8f0] mb-2">Email address</label>
-                      <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@company.com" className="w-full px-4 py-3 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#3b82f6] transition-all" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-[#e2e8f0] mb-2">Password</label>
-                      <input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="w-full px-4 py-3 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#3b82f6] transition-all" />
-                      {authTab === 'login' && <div className="text-right mt-2"><button type="button" onClick={() => { setAuthTab('forgot'); setForgotEmail(email); setError('') }} className="text-xs font-bold text-[#3b82f6] hover:underline bg-transparent">Forgot password?</button></div>}
-                    </div>
-                  </>
-                )}
-
-                {authTab === 'register' && step === 2 && (
-                  <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
-                    <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Full Name</label><input id="register-fullname" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2.5 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white focus:outline-none focus:border-[#3b82f6]" /></div>
-                    <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Phone Number</label><input id="register-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white focus:outline-none focus:border-[#3b82f6]" /></div>
-                    <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Company</label><input id="register-company" type="text" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full px-4 py-2.5 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white focus:outline-none focus:border-[#3b82f6]" /></div>
-                    <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Role / Job Title</label><input id="register-jobtitle" type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="w-full px-4 py-2.5 bg-[#0f172a] border border-[#334155] rounded-lg text-sm text-white focus:outline-none focus:border-[#3b82f6]" /></div>
+                  <div className="flex border-b border-white/10 mb-8 bg-surface-container-low rounded-t-lg">
+                    <button
+                      id="tab-login"
+                      onClick={() => { setAuthTab('login'); setStep(1); setError('') }}
+                      className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors cursor-pointer ${authTab === 'login' ? 'text-primary border-primary' : 'text-on-surface-variant hover:text-white border-transparent'
+                        }`}
+                    >
+                      Login
+                    </button>
+                    <button
+                      id="tab-register"
+                      onClick={() => { setAuthTab('register'); setError('') }}
+                      className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors cursor-pointer ${authTab === 'register' ? 'text-primary border-primary' : 'text-on-surface-variant hover:text-white border-transparent'
+                        }`}
+                    >
+                      Register
+                    </button>
                   </div>
-                )}
 
-                {error && <div className="bg-red-900/30 border border-red-800 text-red-400 text-sm px-4 py-3 rounded-lg text-center">{error}</div>}
+                  <form noValidate onSubmit={authTab === 'login' ? handleSubmit : (step === 1 ? handleNextStep : handleSubmit)} className="space-y-5">
+                    {(authTab === 'login' || (authTab === 'register' && step === 1)) && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-bold text-[#e2e8f0] mb-2">Email address</label>
+                          <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@company.com" className="w-full px-4 py-3 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white placeholder-outline focus:outline-none focus:border-primary transition-all" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#e2e8f0] mb-2">Password</label>
+                          <input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="w-full px-4 py-3 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white placeholder-outline focus:outline-none focus:border-primary transition-all" />
+                          {authTab === 'login' && <div className="text-right mt-2"><button type="button" onClick={() => { setAuthTab('forgot'); setForgotEmail(email); setError('') }} className="text-xs font-bold text-primary hover:underline bg-transparent cursor-pointer">Forgot password?</button></div>}
+                        </div>
+                      </>
+                    )}
 
-                <button id="auth-submit-button" type="submit" disabled={loading} className="w-full py-3.5 bg-[#3b82f6] text-white font-bold text-sm rounded-lg hover:bg-[#2563eb] disabled:opacity-50 transition-colors mt-4 shadow-lg shadow-blue-500/20">
-                  {loading ? 'Please wait...' : authTab === 'login' ? 'Sign In' : (step === 1 ? 'Continue →' : 'Complete Registration')}
-                </button>
+                    {authTab === 'register' && step === 2 && (
+                      <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
+                        <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Full Name</label><input id="register-fullname" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-4 py-2.5 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-primary" /></div>
+                        <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Phone Number</label><input id="register-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-primary" /></div>
+                        <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Company</label><input id="register-company" type="text" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full px-4 py-2.5 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-primary" /></div>
+                        <div><label className="block text-sm font-bold text-[#e2e8f0] mb-1.5">Role / Job Title</label><input id="register-jobtitle" type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="w-full px-4 py-2.5 bg-surface-container-lowest border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-primary" /></div>
+                      </div>
+                    )}
 
-                {authTab === 'register' && step === 2 && (
-                  <button id="auth-back-button" type="button" onClick={() => setStep(1)} className="w-full py-2.5 bg-transparent text-[#94a3b8] font-bold text-sm hover:text-white transition-colors">
-                    ← Back
-                  </button>
-                )}
+                    {error && <div className="bg-error-container/30 border border-error-container text-error text-sm px-4 py-3 rounded-lg text-center">{error}</div>}
 
-                <div className="mt-8 pt-6 border-t border-[#334155] text-center">
-                  <p className="text-[#94a3b8] text-xs flex items-center justify-center gap-1.5 mb-2 font-bold">
-                    <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
-                    Enterprise Security
-                  </p>
-                  <p className="text-[#64748b] text-[10px] font-mono">AES-256 · MFA · SOC2</p>
-                </div>
-              </form>
+                    <button id="auth-submit-button" type="submit" disabled={loading} className="w-full py-3.5 bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold rounded-lg transition-all hover:scale-102 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)] duration-200 mt-4 cursor-pointer">
+                      {loading ? 'Please wait...' : authTab === 'login' ? 'Sign In' : (step === 1 ? 'Continue →' : 'Complete Registration')}
+                    </button>
+
+                    {authTab === 'register' && step === 2 && (
+                      <button id="auth-back-button" type="button" onClick={() => setStep(1)} className="w-full py-2.5 bg-transparent text-[#94a3b8] font-bold text-sm hover:text-white transition-colors cursor-pointer">
+                        ← Back
+                      </button>
+                    )}
+
+                    <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                      <p className="text-[#94a3b8] text-xs flex items-center justify-center gap-1.5 mb-2 font-bold">
+                        <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                        Enterprise Security
+                      </p>
+                      <p className="text-outline-variant text-[10px] font-mono">AES-256 · MFA · SOC2</p>
+                    </div>
+                  </form>
                 </>
               )}
             </div>
@@ -568,34 +721,65 @@ export default function Login() {
   )
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-[#f8fafc] font-sans flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-background text-on-background font-body-md text-body-md selection:bg-primary-container selection:text-on-primary-container relative overflow-x-hidden flex flex-col">
+      {/* Background decoration */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none bg-[#051424]"></div>
 
-      <LightningBackground />
-
-      {/* Header */}
-      <header className="relative z-20 flex items-center justify-between px-8 py-6 max-w-[1400px] mx-auto w-full">
-        <div
-          onClick={() => setActiveTab('home')}
-          className="flex items-center gap-3 cursor-pointer group"
-        >
-          <img src="/logo.png" alt="Cloudy Bro" className="w-9 h-9 group-hover:scale-110 transition-transform" />
-          <span className="text-xl font-extrabold tracking-tight">CLOUDY <span className="text-[#3b82f6]">BRO</span></span>
+      {/* Navigation */}
+      <nav className="bg-background/80 backdrop-blur-xl top-0 sticky z-30 border-b border-white/10 shadow-[0px_0px_20px_rgba(60,215,255,0.1)]">
+        <div className="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+          <div
+            onClick={() => setActiveTab('home')}
+            className="flex items-center gap-4 cursor-pointer group"
+          >
+            <img alt="CloudyBro Logo" className="h-8 w-8 object-contain group-hover:scale-110 transition-transform" src="/logo.png" />
+            <span className="text-headline-lg font-headline-lg text-on-surface font-bold tracking-tight">CloudyBro</span>
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+            <button
+              onClick={() => setActiveTab('features')}
+              className={`transition-colors duration-300 font-label-caps text-label-caps cursor-pointer ${
+                activeTab === 'features' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
+              }`}
+            >
+              Features
+            </button>
+            <button
+              onClick={() => setActiveTab('pricing')}
+              className={`transition-colors duration-300 font-label-caps text-label-caps cursor-pointer ${
+                activeTab === 'pricing' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
+              }`}
+            >
+              Pricing
+            </button>
+            <button
+              onClick={() => setActiveTab('docs')}
+              className={`transition-colors duration-300 font-label-caps text-label-caps cursor-pointer ${
+                activeTab === 'docs' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
+              }`}
+            >
+              Docs
+            </button>
+            <button
+              onClick={() => { setAuthTab('login'); setIsLoginOpen(true) }}
+              className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps cursor-pointer"
+            >
+              Login
+            </button>
+          </div>
+          <div>
+            <button
+              onClick={() => { setAuthTab('register'); setIsLoginOpen(true) }}
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold glow-primary transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              Get Started Free
+            </button>
+          </div>
         </div>
+      </nav>
 
-        <nav className="hidden md:flex items-center gap-8 bg-[#1e293b]/50 backdrop-blur-md px-6 py-2 rounded-full border border-[#334155]">
-          <button onClick={() => setActiveTab('features')} className={`text-sm font-bold transition-colors ${activeTab === 'features' ? 'text-white' : 'text-[#94a3b8] hover:text-white'}`}>Features</button>
-          <button onClick={() => setActiveTab('pricing')} className={`text-sm font-bold transition-colors ${activeTab === 'pricing' ? 'text-white' : 'text-[#94a3b8] hover:text-white'}`}>Pricing</button>
-          <button onClick={() => setActiveTab('docs')} className={`text-sm font-bold transition-colors ${activeTab === 'docs' ? 'text-white' : 'text-[#94a3b8] hover:text-white'}`}>Docs</button>
-        </nav>
-
-        <div className="flex items-center gap-4">
-          <button onClick={() => { setAuthTab('login'); setIsLoginOpen(true) }} className="text-sm font-bold text-white hover:text-[#3b82f6] transition-colors hidden sm:block">Login</button>
-          <button onClick={() => { setAuthTab('register'); setIsLoginOpen(true) }} className="bg-[#3b82f6] hover:bg-[#2563eb] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-blue-500/20 transition-colors">Start Free</button>
-        </div>
-      </header>
-
-      {/* Dynamic Content */}
-      <main className="flex-1 flex flex-col items-center pt-10 px-6 z-10 w-full relative">
+      {/* Main Content */}
+      <main className="flex-1 w-full relative z-10 flex flex-col items-center pt-10 px-6">
         {activeTab === 'home' && HomeContent()}
         {activeTab === 'features' && FeaturesContent()}
         {activeTab === 'pricing' && PricingContent()}
@@ -603,20 +787,45 @@ export default function Login() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-[#334155] bg-[#0f172a] mt-auto">
-        <div className="max-w-[1400px] mx-auto px-8 py-8 flex flex-col md:flex-row items-center justify-between">
-          <p className="text-[#64748b] text-sm font-mono">&copy; 2026 Cloudy Bro. All rights reserved.</p>
-          <div className="flex items-center gap-6 mt-4 md:mt-0 text-sm font-bold text-[#64748b]">
-            <a href="#" className="hover:text-white transition-colors">Status</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
+      <footer className="bg-surface-dim full-width py-12 border-t border-outline-variant mt-20">
+        <div className="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter text-left">
+          <div className="col-span-1 md:col-span-2 flex flex-col gap-4">
+            <div className="flex items-center gap-2 mb-2">
+              <img alt="CloudyBro Logo" className="h-6 w-6 object-contain" src="/logo.png" />
+              <span className="text-headline-lg font-headline-lg text-on-surface font-bold text-xl">CloudyBro</span>
+            </div>
+            <p className="text-on-surface-variant font-body-md text-sm max-w-sm">
+              Your AI Copilot for DevOps. Automating the unglamorous parts of infrastructure management so you can focus on building.
+            </p>
+            <div className="mt-4 text-xs text-on-surface-variant/50 flex items-center gap-1.5">
+              Made with 
+              <span className="text-error inline-flex items-center">
+                <svg className="w-3.5 h-3.5 fill-current text-red-500" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              </span> 
+              for DevOps engineers
+            </div>
           </div>
+          <div className="flex flex-col gap-3">
+            <span className="font-label-caps text-label-caps text-on-surface font-semibold mb-2">Product</span>
+            <button onClick={() => setActiveTab('features')} className="text-left text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline cursor-pointer">Features</button>
+            <a className="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Security</a>
+            <button onClick={() => setActiveTab('pricing')} className="text-left text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline cursor-pointer">Pricing</button>
+          </div>
+          <div className="flex flex-col gap-3">
+            <span className="font-label-caps text-label-caps text-on-surface font-semibold mb-2">Legal &amp; Social</span>
+            <a className="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Privacy Policy</a>
+            <a className="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Terms of Service</a>
+            <a className="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Twitter</a>
+            <a className="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="https://github.com">GitHub</a>
+          </div>
+        </div>
+        <div className="max-w-container-max mx-auto px-margin-desktop mt-12 pt-6 border-t border-white/5 text-center text-xs text-on-surface-variant/50">
+          © 2026 CloudyBro AI. All rights reserved.
         </div>
       </footer>
 
       {/* Sliding Login Drawer */}
       {LoginDrawer()}
-
     </div>
   )
 }

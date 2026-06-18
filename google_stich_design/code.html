@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CloudyBro - DevOps on Autopilot</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#273647",
+                        "surface-container-lowest": "#010f1f",
+                        "tertiary-container": "#c4c1c9",
+                        "on-tertiary-fixed-variant": "#47464c",
+                        "tertiary-fixed": "#e4e1e9",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#003642",
+                        "surface-container": "#122131",
+                        "secondary-fixed": "#eaddff",
+                        "surface-dim": "#051424",
+                        "on-error": "#690005",
+                        "tertiary-fixed-dim": "#c8c5cd",
+                        "inverse-on-surface": "#233143",
+                        "surface-container-high": "#1c2b3c",
+                        "surface-tint": "#3cd7ff",
+                        "on-background": "#d4e4fa",
+                        "on-tertiary-container": "#504f55",
+                        "surface-bright": "#2c3a4c",
+                        "outline": "#859398",
+                        "inverse-primary": "#00677e",
+                        "on-secondary": "#3f008e",
+                        "on-secondary-container": "#c9aeff",
+                        "on-tertiary-fixed": "#1b1b20",
+                        "surface-container-low": "#0d1c2d",
+                        "on-surface": "#d4e4fa",
+                        "on-surface-variant": "#bbc9cf",
+                        "tertiary": "#e0dde5",
+                        "inverse-surface": "#d4e4fa",
+                        "on-primary-fixed-variant": "#004e5f",
+                        "surface-container-highest": "#273647",
+                        "error-container": "#93000a",
+                        "primary": "#a8e8ff",
+                        "primary-fixed": "#b4ebff",
+                        "secondary-fixed-dim": "#d2bbff",
+                        "primary-fixed-dim": "#3cd7ff",
+                        "secondary": "#d2bbff",
+                        "primary-container": "#00d4ff",
+                        "on-primary-fixed": "#001f27",
+                        "on-secondary-fixed": "#25005a",
+                        "on-primary-container": "#00586b",
+                        "outline-variant": "#3c494e",
+                        "on-tertiary": "#303036",
+                        "secondary-container": "#6001d1",
+                        "on-secondary-fixed-variant": "#5a00c6",
+                        "surface": "#051424",
+                        "error": "#ffb4ab",
+                        "background": "#051424"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "24px": "1.5rem"
+                    },
+                    spacing: {
+                        "margin-desktop": "40px",
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Geist", "sans-serif"],
+                        "code-sm": ["JetBrains Mono", "monospace"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "display-lg": ["Geist", "sans-serif"],
+                        "label-caps": ["Geist", "sans-serif"],
+                        "headline-lg-mobile": ["Geist", "sans-serif"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "code-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #051424; /* Base Dark Theme */
+            color: #d4e4fa; /* on-background */
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .glow-primary {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .glow-primary:hover {
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+        }
+        
+        .terminal-bg {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body class="antialiased relative overflow-x-hidden font-body-md text-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Global Background Shader -->
+<div class="fixed inset-0 z-[-1] pointer-events-none">
+
+</div>
+<!-- Navigation -->
+<nav class="bg-background/80 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-white/10 shadow-[0px_0px_20px_rgba(60,215,255,0.1)]">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<img alt="CloudyBro Logo" class="h-8 w-8 object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLv82PwEcd63D1gINv6mXwJiQOr5Sdg5otxzAyFm3kTcxgB-pN50lJh5cApRnKVtqQ0_QHMUjuWYE7PY6-YeecpMyWzWH1yXS4ZzLlHjzU9cZCoHMk0DxBMZuyox173RSa5AKuDQa_dThrWkyEgg6V5FjvDjCFF4GQa1CrCtj7oouLvncXSJSdAb-4QjWjFakKD8ajvGFFt2LVRgkaxuzZRFxczze0kb0KtTxw2xUgxCgn2fuX0ExtNC5g"/>
+<span class="text-headline-lg font-headline-lg text-on-surface font-bold tracking-tight">CloudyBro</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps" href="#">Features</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps" href="#">Pricing</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps" href="#">Docs</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps" href="#">Blog</a>
+</div>
+<div>
+<a class="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold glow-primary transition-all duration-300 hover:scale-105 active:scale-95 duration-100" href="#">
+                    Get Started Free
+                </a>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="relative pt-32 pb-20 px-margin-desktop md:px-margin-desktop overflow-hidden">
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<!-- Hero Content -->
+<div class="flex flex-col gap-8 z-10">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel w-fit">
+<span class="w-2 h-2 rounded-full bg-surface-tint animate-pulse"></span>
+<span class="font-code-sm text-code-sm text-surface-tint">v2.0 Beta Live</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface">
+                    DevOps on <br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary-container">Autopilot</span>
+</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-lg text-lg">
+                    AI-driven monitoring, instant incident remediation, and autonomous infrastructure optimization. Take command of your systems without writing another script.
+                </p>
+<div class="flex flex-wrap items-center gap-4">
+<button class="px-8 py-3 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold glow-primary transition-all hover:scale-105">
+                        Start for Free
+                    </button>
+<button class="px-8 py-3 rounded-full glass-panel text-on-surface font-label-caps text-label-caps hover:bg-white/5 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+                        Watch Demo
+                    </button>
+</div>
+</div>
+<!-- Hero Visual (Terminal Mockup) -->
+<div class="z-10 relative perspective-1000">
+<div class="glass-panel rounded-24px p-1 glow-primary transform rotate-y-[-5deg] rotate-x-[5deg] hover:rotate-y-0 hover:rotate-x-0 transition-transform duration-700 ease-out">
+<div class="rounded-[22px] terminal-bg overflow-hidden border border-white/5 shadow-2xl">
+<!-- Terminal Header -->
+<div class="bg-surface-variant/50 px-4 py-2 border-b border-white/10 flex items-center gap-2">
+<div class="flex gap-1.5">
+<div class="w-3 h-3 rounded-full bg-error"></div>
+<div class="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
+<div class="w-3 h-3 rounded-full bg-[#10b981]"></div>
+</div>
+<div class="flex-1 text-center font-code-sm text-code-sm text-on-surface-variant/70">
+                                cloudybro@cluster-alpha:~
+                            </div>
+</div>
+<!-- Terminal Body -->
+<div class="p-6 font-code-sm text-code-sm flex flex-col gap-3 min-h-[300px]">
+<div class="text-on-surface-variant">
+<span class="text-surface-tint">❯</span> analyzing load spikes...
+                            </div>
+<div class="text-on-surface-variant">
+<span class="text-surface-tint">❯</span> detecting anomaly in us-east-1...
+                            </div>
+<div class="text-primary mt-2">
+                                [ALERT] CPU usage &gt; 90% on api-gateway-03
+                            </div>
+<div class="text-on-surface-variant mt-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-surface-tint animate-spin" style="font-size: 16px;">autorenew</span>
+                                AI Agent initiating auto-scaling...
+                            </div>
+<div class="text-[#10b981] mt-2">
+                                ✓ Provisioned 2 new instances successfully.
+                            </div>
+<div class="text-[#10b981]">
+                                ✓ Traffic re-routed. System stable. Time to resolve: 1.2s.
+                            </div>
+<div class="text-surface-tint mt-4 animate-pulse">_</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trust Bar -->
+<section class="py-12 border-y border-white/5 bg-surface-dim/50">
+<div class="max-w-container-max mx-auto px-margin-desktop flex flex-wrap justify-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+<!-- Simulated Logos using text for structural placeholder since specific logo images weren't provided, 
+                 but matching the layout intent -->
+<div class="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">AWS</div>
+<div class="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">GitHub</div>
+<div class="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">Docker</div>
+<div class="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">Kubernetes</div>
+<div class="font-headline-lg text-headline-lg-mobile text-on-surface-variant font-bold tracking-tighter">Terraform</div>
+</div>
+</section>
+<!-- Features Grid -->
+<section class="py-24 px-margin-desktop relative">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-display-lg text-headline-lg md:text-display-lg text-on-surface mb-4">Command your Infrastructure</h2>
+<p class="font-body-md text-on-surface-variant max-w-2xl mx-auto">Intelligent tools designed to anticipate failures before they happen.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Feature 1 -->
+<div class="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-surface-tint">smart_toy</span>
+</div>
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-3">AI Root Cause</h3>
+<p class="font-body-md text-on-surface-variant">Instantly trace complex microservice failures down to the exact commit that broke the build.</p>
+</div>
+<!-- Feature 2 -->
+<div class="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary">cloud_sync</span>
+</div>
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-3">Multi-Cloud Sync</h3>
+<p class="font-body-md text-on-surface-variant">Unified visibility across AWS, GCP, and Azure with zero configuration required.</p>
+</div>
+<!-- Feature 3 -->
+<div class="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-surface-tint">monitoring</span>
+</div>
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-3">Predictive Metrics</h3>
+<p class="font-body-md text-on-surface-variant">Forecast resource exhaustion days before it impacts your end-users.</p>
+</div>
+<!-- Feature 4 -->
+<div class="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary">notifications_active</span>
+</div>
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-3">Smart Alerts</h3>
+<p class="font-body-md text-on-surface-variant">Reduce alert fatigue. Only get notified when human intervention is actually required.</p>
+</div>
+<!-- Feature 5 -->
+<div class="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-surface-tint">build</span>
+</div>
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-3">Auto-Remediation</h3>
+<p class="font-body-md text-on-surface-variant">Define self-healing policies that execute standard operating procedures automatically.</p>
+</div>
+<!-- Feature 6 -->
+<div class="glass-panel p-8 rounded-24px hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary">security</span>
+</div>
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-3">Shift-Left Security</h3>
+<p class="font-body-md text-on-surface-variant">Continuous vulnerability scanning embedded directly into your CI/CD pipelines.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="py-24 px-margin-desktop bg-surface-dim/30">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-display-lg text-headline-lg md:text-display-lg text-on-surface mb-4">Simple, Transparent Pricing</h2>
+<p class="font-body-md text-on-surface-variant max-w-2xl mx-auto">Scale your infrastructure without scaling your costs exponentially.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto">
+<!-- Starter Tier -->
+<div class="glass-panel p-8 rounded-24px flex flex-col h-full">
+<div class="mb-8">
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-2">Starter</h3>
+<div class="text-on-surface-variant text-sm mb-4">Perfect for hobby projects.</div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-4xl text-on-surface">$0</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+</div>
+<ul class="flex flex-col gap-4 mb-8 flex-1">
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            1 Cluster limit
+                        </li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            Basic metrics
+                        </li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            Community support
+                        </li>
+</ul>
+<button class="w-full py-3 rounded-full border border-white/20 text-on-surface font-label-caps text-label-caps hover:bg-white/5 transition-all">
+                        Get Started
+                    </button>
+</div>
+<!-- Pro Tier (Highlighted) -->
+<div class="glass-panel p-8 rounded-24px flex flex-col h-full border-surface-tint/50 glow-primary transform md:-translate-y-4 bg-surface-container-low/80">
+<div class="absolute top-0 right-8 transform -translate-y-1/2 bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase">
+                        Most Popular
+                    </div>
+<div class="mb-8">
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-2">Pro</h3>
+<div class="text-on-surface-variant text-sm mb-4">For production workloads.</div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-4xl text-on-surface">$29</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+</div>
+<ul class="flex flex-col gap-4 mb-8 flex-1">
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            Unlimited Clusters
+                        </li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            AI Auto-remediation
+                        </li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            Advanced Alerts
+                        </li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            Priority Support
+                        </li>
+</ul>
+<button class="w-full py-3 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold transition-all hover:scale-105">
+                        Start 14-Day Trial
+                    </button>
+</div>
+<!-- Enterprise Tier -->
+<div class="glass-panel p-8 rounded-24px flex flex-col h-full">
+<div class="mb-8">
+<h3 class="font-headline-lg text-[24px] text-on-surface mb-2">Enterprise</h3>
+<div class="text-on-surface-variant text-sm mb-4">Custom needs &amp; compliance.</div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-4xl text-on-surface">Custom</span>
+</div>
+</div>
+<ul class="flex flex-col gap-4 mb-8 flex-1">
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            SSO &amp; SAML
+                        </li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            Dedicated Instance
+                        </li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-surface-tint text-sm">check</span>
+                            Custom Models
+                        </li>
+</ul>
+<button class="w-full py-3 rounded-full border border-white/20 text-on-surface font-label-caps text-label-caps hover:bg-white/5 transition-all">
+                        Contact Sales
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-surface-dim full-width py-12 border-t border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="col-span-1 md:col-span-2 flex flex-col gap-4">
+<div class="flex items-center gap-2 mb-2">
+<img alt="CloudyBro Logo" class="h-6 w-6 object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLv82PwEcd63D1gINv6mXwJiQOr5Sdg5otxzAyFm3kTcxgB-pN50lJh5cApRnKVtqQ0_QHMUjuWYE7PY6-YeecpMyWzWH1yXS4ZzLlHjzU9cZCoHMk0DxBMZuyox173RSa5AKuDQa_dThrWkyEgg6V5FjvDjCFF4GQa1CrCtj7oouLvncXSJSdAb-4QjWjFakKD8ajvGFFt2LVRgkaxuzZRFxczze0kb0KtTxw2xUgxCgn2fuX0ExtNC5g"/>
+<span class="text-headline-lg font-headline-lg text-on-surface font-bold text-xl">CloudyBro</span>
+</div>
+<p class="text-on-surface-variant font-body-md text-sm max-w-sm">
+                    Your AI Copilot for DevOps. Automating the unglamorous parts of infrastructure management so you can focus on building.
+                </p>
+<div class="mt-4 text-xs text-on-surface-variant/50">
+                    Made with <span class="text-error">❤️</span> for DevOps engineers
+                </div>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-caps text-label-caps text-on-surface font-semibold mb-2">Product</span>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Features</a>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Security</a>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Pricing</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-caps text-label-caps text-on-surface font-semibold mb-2">Legal &amp; Social</span>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Terms of Service</a>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Twitter</a>
+<a class="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">GitHub</a>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop mt-12 pt-6 border-t border-white/5 text-center text-xs text-on-surface-variant/50">
+            © 2024 CloudyBro AI. All rights reserved.
+        </div>
+</footer>
+</body></html>

@@ -14,30 +14,30 @@ export default function AlertsTable({ alerts = [], onDiagnose, onResolve, diagno
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
-            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] uppercase py-3 pr-4">Severity</th>
-            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] uppercase py-3 pr-4">Service</th>
-            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] uppercase py-3 pr-4">Message</th>
-            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] uppercase py-3 pr-4">Time</th>
-            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] uppercase py-3 pr-4">Status</th>
-            <th className="text-right text-[10px] font-bold tracking-[0.1em] text-[#64748b] uppercase py-3">Actions</th>
+          <tr className="border-b border-[#e2e8f0] dark:border-gray-700">
+            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] dark:text-gray-400 uppercase py-3 pr-4">Severity</th>
+            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] dark:text-gray-400 uppercase py-3 pr-4">Service</th>
+            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] dark:text-gray-400 uppercase py-3 pr-4">Message</th>
+            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] dark:text-gray-400 uppercase py-3 pr-4">Time</th>
+            <th className="text-left text-[10px] font-bold tracking-[0.1em] text-[#64748b] dark:text-gray-400 uppercase py-3 pr-4">Status</th>
+            <th className="text-right text-[10px] font-bold tracking-[0.1em] text-[#64748b] dark:text-gray-400 uppercase py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
           {alerts.map((alert) => {
             const isOpen = (alert.status || '').toLowerCase() !== 'resolved'
             return (
-              <tr key={alert.id} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
+              <tr key={alert.id} className="border-b border-[#f1f5f9] dark:border-gray-700/50 hover:bg-[#f8fafc] dark:hover:bg-gray-800/40">
                 <td className="py-3 pr-4">
                   <AlertBadge severity={alert.severity} />
                 </td>
-                <td className="py-3 pr-4 font-semibold text-[#0f172a] text-xs">
+                <td className="py-3 pr-4 font-semibold text-[#0f172a] dark:text-gray-200 text-xs">
                   {alert.service_name || alert.service || 'unknown'}
                 </td>
-                <td className="py-3 pr-4 text-[#64748b] text-xs max-w-xs truncate">
+                <td className="py-3 pr-4 text-[#64748b] dark:text-gray-400 text-xs max-w-xs truncate">
                   {alert.message || alert.alert_type || '—'}
                 </td>
-                <td className="py-3 pr-4 text-[#64748b] text-xs whitespace-nowrap">
+                <td className="py-3 pr-4 text-[#64748b] dark:text-gray-400 text-xs whitespace-nowrap">
                   {timeAgo(alert.created_at || alert.timestamp)}
                 </td>
                 <td className="py-3 pr-4">

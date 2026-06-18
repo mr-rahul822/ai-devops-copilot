@@ -147,8 +147,8 @@ export default function LiveTerminal({ serviceFilter }) {
   }
 
   return (
-    <div className="flex flex-col h-[350px] bg-[#0d1117] border border-[#334155] rounded-xl overflow-hidden font-mono shadow-inner">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-[#334155]">
+    <div className="flex flex-col h-[350px] bg-[#0d1117] border border-[#e2e8f0] dark:border-[#334155] rounded-xl overflow-hidden font-mono shadow-inner">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-[#e2e8f0] dark:border-[#334155]">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
           <span className="text-[12px] font-bold text-white uppercase tracking-wider">Live Event Stream</span>

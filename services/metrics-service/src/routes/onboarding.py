@@ -67,21 +67,27 @@ ARN_PATTERN = re.compile(r"^arn:aws:iam::\d{12}:role/.+$")
 async def _verify_token(authorization: str) -> dict:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or malformed Authorization header.")
+    
+    token = authorization.split(" ", 1)[1]
+    import jwt
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(
-                f"{settings.auth_service_url}/auth/me",
-                headers={"Authorization": authorization},
-            )
-    except (httpx.ConnectError, httpx.TimeoutException):
-        raise HTTPException(status_code=503, detail="Auth service unreachable.")
-    if resp.status_code == 401:
+        decoded = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
-    if resp.status_code == 404:
-        raise HTTPException(status_code=401, detail="User session expired. Please log in again.")
-    if resp.status_code != 200:
-        raise HTTPException(status_code=503, detail="Auth service error.")
-    return resp.json()
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+
+    user_id = decoded.get("userId")
+    email = decoded.get("email")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+
+    return {
+        "user": {
+            "id": user_id,
+            "email": email
+        }
+    }
 
 
 async def require_auth(authorization: Optional[str] = Header(default=None)) -> dict:

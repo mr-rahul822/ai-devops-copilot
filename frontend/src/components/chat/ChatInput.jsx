@@ -17,7 +17,7 @@ export default function ChatInput({ onSend, disabled }) {
   ]
 
   return (
-    <div className="border-t border-[#e2e8f0] p-4 bg-white">
+    <div className="border-t border-[#e2e8f0] dark:border-[#334155] p-4 bg-white dark:bg-[#1e293b]">
       {/* Suggestion chips */}
       <div className="flex gap-2 mb-3">
         {suggestions.map((s) => (
@@ -25,7 +25,7 @@ export default function ChatInput({ onSend, disabled }) {
             key={s}
             onClick={() => onSend(s)}
             disabled={disabled}
-            className="text-[11px] text-[#2563eb] bg-[#eff6ff] px-3 py-1.5 rounded-full hover:bg-[#dbeafe] disabled:opacity-50 transition-colors"
+            className="text-[11px] text-[#2563eb] dark:text-blue-400 bg-[#eff6ff] dark:bg-blue-950/40 px-3 py-1.5 rounded-full hover:bg-[#dbeafe] dark:hover:bg-blue-900/40 disabled:opacity-50 transition-colors"
           >
             {s}
           </button>
@@ -41,7 +41,7 @@ export default function ChatInput({ onSend, disabled }) {
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           disabled={disabled}
           placeholder="Ask about your infrastructure..."
-          className="flex-1 px-4 py-2.5 border border-[#e2e8f0] rounded-lg text-sm text-[#0f172a] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent disabled:bg-[#f8fafc]"
+          className="flex-1 px-4 py-2.5 border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#0f172a] rounded-lg text-sm text-[#0f172a] dark:text-white placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent disabled:bg-[#f8fafc] dark:disabled:bg-[#161b22]"
         />
         <button
           onClick={handleSend}

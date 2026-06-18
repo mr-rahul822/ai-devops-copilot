@@ -1,23 +1,16 @@
 """
-src/middleware/verify_token.py — JWT verification via the auth-service.
-
-Calls GET http://auth-service:3001/auth/me with the Bearer token.
-  - If auth-service responds 200 → user is authenticated, return user dict.
-  - If auth-service is DOWN     → return 503 (not 401) so the caller
-    knows it's a transient infra issue, not bad credentials.
-  - If token is invalid          → return 401.
+src/middleware/verify_token.py — JWT verification via local decoding.
 """
 
 import logging
 import os
-
-import httpx
+import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 logger = logging.getLogger(__name__)
 
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth-service:3001")
+JWT_SECRET = os.getenv("JWT_SECRET", "14856ac8af742b72db85a5c25170f0a0e2137c8a19a8e6081f8e5d9097cb92b5")
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -27,14 +20,10 @@ async def verify_token(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
 ) -> dict:
     """
-    FastAPI dependency that verifies the JWT by calling the auth-service.
+    FastAPI dependency that verifies the JWT locally to avoid rate limiter cascade.
 
     Returns:
-        The authenticated user dict from auth-service.
-
-    Raises:
-        HTTPException 401 — bad or missing token.
-        HTTPException 503 — auth-service unreachable.
+        The authenticated user dict.
     """
     if credentials is None:
         raise HTTPException(status_code=401, detail="Access denied. No token provided.")
@@ -42,29 +31,20 @@ async def verify_token(
     token = credentials.credentials
 
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(
-                f"{AUTH_SERVICE_URL}/auth/me",
-                headers={"Authorization": f"Bearer {token}"},
-            )
-    except (httpx.ConnectError, httpx.TimeoutException) as e:
-        logger.error("Auth-service unreachable: %s", e)
-        raise HTTPException(
-            status_code=503,
-            detail="Auth service is unavailable. Please try again later.",
-        )
-
-    if resp.status_code == 200:
-        data = resp.json()
-        # auth-service returns { user: { id, email, ... } }
-        return data.get("user", data)
-
-    if resp.status_code == 401:
+        decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
 
-    # Unexpected status from auth-service
-    logger.warning("Auth-service returned %d: %s", resp.status_code, resp.text)
-    raise HTTPException(
-        status_code=503,
-        detail=f"Auth service returned unexpected status {resp.status_code}.",
-    )
+    user_id = decoded.get("userId")
+    email = decoded.get("email")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token payload.")
+
+    return {
+        "id": user_id,
+        "email": email
+    }
+

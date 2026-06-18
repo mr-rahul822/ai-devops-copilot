@@ -212,7 +212,7 @@ export default function CloudConfiguration() {
           <div className="p-6 space-y-5">
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-[13px] text-red-700 dark:text-red-400 flex items-start gap-2">
-                <span className="text-red-500 mt-0.5">⚠️</span>
+                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 <span>{error}</span>
               </div>
             )}
@@ -240,9 +240,9 @@ export default function CloudConfiguration() {
                 <label className="text-[13px] font-semibold text-[#334155] dark:text-gray-300">Trust Policy JSON</label>
                 <button
                   onClick={() => copyToClipboard(JSON.stringify(trustPolicy, null, 2), 'policy')}
-                  className="text-[12px] font-medium text-[#2563eb] hover:text-[#1d4ed8] flex items-center gap-1"
+                  className="text-[12px] font-semibold text-[#2563eb] hover:text-[#1d4ed8] flex items-center gap-1"
                 >
-                  {copiedPolicy ? '✓ Copied!' : '📋 Copy to clipboard'}
+                  {copiedPolicy ? 'Copied!' : 'Copy to clipboard'}
                 </button>
               </div>
               <pre className="bg-[#0f172a] text-[#e2e8f0] p-4 rounded-lg text-[12px] font-mono overflow-x-auto leading-relaxed border border-[#334155]">
@@ -259,9 +259,9 @@ export default function CloudConfiguration() {
                 </div>
                 <button
                   onClick={() => copyToClipboard(externalId, 'externalId')}
-                  className="px-3 py-2.5 text-[12px] font-medium text-[#2563eb] border border-[#e2e8f0] dark:border-[#334155] rounded-lg hover:bg-[#f8fafc] dark:hover:bg-[#334155]"
+                  className="px-4 py-2.5 text-[12px] font-bold text-[#2563eb] border border-[#e2e8f0] dark:border-[#334155] rounded-lg hover:bg-[#f8fafc] dark:hover:bg-[#334155] transition-colors"
                 >
-                  {copiedExternalId ? '✓' : '📋'}
+                  {copiedExternalId ? 'Copied' : 'Copy'}
                 </button>
               </div>
               <p className="text-[11px] text-[#94a3b8] mt-1">This is already embedded in the Trust Policy above. It prevents unauthorized access (confused deputy protection).</p>
@@ -306,7 +306,7 @@ export default function CloudConfiguration() {
 
             {/* Security note */}
             <div className="bg-[#f0fdf4] dark:bg-green-900/20 border border-[#bbf7d0] dark:border-green-800 rounded-lg p-3 text-[12px] text-[#15803d] dark:text-green-400 flex items-center gap-2">
-              <span>🔒</span>
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
               <span>No permanent credentials are stored. We use STS AssumeRole to get temporary credentials that expire in 1 hour and auto-refresh.</span>
             </div>
 
@@ -339,7 +339,7 @@ export default function CloudConfiguration() {
           <div className="p-6 space-y-4">
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-[13px] text-red-700 dark:text-red-400 flex items-start gap-2">
-                <span className="text-red-500 mt-0.5">⚠️</span>
+                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 <span>{error}</span>
               </div>
             )}
@@ -361,7 +361,7 @@ export default function CloudConfiguration() {
             </div>
 
             <div className="bg-[#f0fdf4] dark:bg-green-900/20 border border-[#bbf7d0] dark:border-green-800 rounded-lg p-3 text-[12px] text-[#15803d] dark:text-green-400 flex items-center gap-2">
-              <span>🔒</span>
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
               <span>Only the Role ARN is stored — no access keys, no secrets. Temporary credentials auto-refresh every 55 minutes.</span>
             </div>
 
@@ -430,9 +430,15 @@ function ConnectingState({ steps, currentStep }) {
           const active = i === currentStep
           return (
             <div key={step.key} className="flex items-center gap-3">
-              <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[12px] ${
-                done ? 'bg-green-500 text-white' : active ? 'bg-[#ff9900] text-white animate-pulse' : 'bg-[#f1f5f9] dark:bg-[#334155] text-[#94a3b8]'}`}>
-                {done ? '✓' : active ? '⟳' : '○'}
+              <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                done ? 'bg-green-500 text-white' : active ? 'bg-[#ff9900] text-white' : 'bg-[#f1f5f9] dark:bg-[#334155] text-[#94a3b8]'}`}>
+                {done ? (
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                ) : active ? (
+                  <svg className="w-3.5 h-3.5 text-white animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                )}
               </span>
               <span className={`text-[14px] ${done ? 'text-green-700 dark:text-green-400 font-medium' : active ? 'text-[#0f172a] dark:text-white font-medium' : 'text-[#94a3b8]'}`}>
                 {step.label}
@@ -452,7 +458,9 @@ function ConnectedState({ statusData, instances, onDisconnect, onViewDashboard, 
       <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-green-200 dark:border-green-800 shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white text-lg">✓</div>
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            </div>
             <div>
               <h2 className="text-[17px] font-bold text-[#0f172a] dark:text-white">AWS Connected</h2>
               <p className="text-[13px] text-[#64748b] dark:text-gray-400">
@@ -493,8 +501,8 @@ function ConnectedState({ statusData, instances, onDisconnect, onViewDashboard, 
                   <span>Disk: <b className="dark:text-white">{inst.disk ?? 0}%</b></span>
                 </div>
                 <div className="mt-2 text-[12px]">
-                  <span className={inst.cloudwatch_agent || inst.cloudwatch_agent_installed ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}>
-                    CloudWatch Agent: {inst.cloudwatch_agent || inst.cloudwatch_agent_installed ? '✓ Active' : '⚠ Not installed'}
+                  <span className={inst.cloudwatch_agent || inst.cloudwatch_agent_installed ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}>
+                    CloudWatch Agent: {inst.cloudwatch_agent || inst.cloudwatch_agent_installed ? 'Active' : 'Not installed'}
                   </span>
                 </div>
                 {inst.agent_note && <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">{inst.agent_note}</p>}

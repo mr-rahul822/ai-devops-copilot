@@ -10,6 +10,8 @@ import Settings from './pages/Settings'
 import CloudConfiguration from './pages/CloudConfiguration'
 import AIInsights from './pages/AIInsights'
 import ComingSoon from './pages/ComingSoon'
+import About from './pages/About'
+import Contact from './pages/Contact'
 
 function ProtectedRoute({ children }) {
   const token = useStore((s) => s.token)
@@ -27,6 +29,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clusters" element={<ComingSoon />} />

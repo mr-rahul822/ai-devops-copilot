@@ -64,18 +64,18 @@ export default function CombinedChart({ data, isLoading, highlightedService }) {
 
   if (isLoading) {
     return (
-      <div className="h-[340px] w-full bg-[#1e293b] rounded-xl flex items-center justify-center text-[#64748b]">
+      <div className="h-[340px] w-full bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-xl flex items-center justify-center text-[#64748b]">
         Waiting for data...
       </div>
     )
   }
 
   return (
-    <div className="w-full bg-[#1e293b] rounded-xl border border-[#334155] p-5 shadow-lg">
+    <div className="w-full bg-white dark:bg-[#1e293b] rounded-xl border border-[#e2e8f0] dark:border-[#334155] p-5 shadow-lg">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h2 className="text-[14px] font-bold text-white uppercase tracking-wider">Combined Infrastructure Overview</h2>
-          <p className="text-[12px] text-[#94a3b8]">Real-time aggregated view across all services</p>
+          <h2 className="text-[14px] font-bold text-gray-800 dark:text-white uppercase tracking-wider">Combined Infrastructure Overview</h2>
+          <p className="text-[12px] text-gray-600 dark:text-[#94a3b8]">Real-time aggregated view across all services</p>
         </div>
       </div>
 
@@ -83,25 +83,25 @@ export default function CombinedChart({ data, isLoading, highlightedService }) {
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff08" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
               <XAxis 
                 dataKey="timestamp" 
                 tickFormatter={(ts) => format(new Date(ts), 'HH:mm')}
-                stroke="#64748b"
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                stroke="var(--chart-axis)"
+                tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis 
                 domain={[0, 100]}
                 tickFormatter={(val) => `${val}%`}
-                stroke="#64748b"
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                stroke="var(--chart-axis)"
+                tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
+                contentStyle={{ backgroundColor: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: '8px', color: 'var(--chart-tooltip-text)' }}
                 labelFormatter={(label) => format(new Date(label), 'HH:mm:ss')}
                 itemFormatter={(val, name) => [`${val.toFixed(1)}%`, SERVICE_NAMES[name] || name]}
               />
@@ -111,7 +111,7 @@ export default function CombinedChart({ data, isLoading, highlightedService }) {
                 iconType="circle"
                 wrapperStyle={{ fontSize: '12px' }}
                 onClick={(e) => toggleService(e.dataKey)}
-                formatter={(value) => <span style={{ color: '#cbd5e1', cursor: 'pointer' }}>{SERVICE_NAMES[value] || value}</span>}
+                formatter={(value) => <span className="text-[#64748b] dark:text-var(--chart-legend-text) hover:text-[#0f172a] dark:hover:text-white font-medium cursor-pointer transition-colors" style={{ color: 'var(--chart-legend-text)' }}>{SERVICE_NAMES[value] || value}</span>}
               />
               <ReferenceLine y={85} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Warning threshold', fill: '#ef4444', fontSize: 11 }} />
               

@@ -66,17 +66,17 @@ export default function Dashboard() {
 
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">Dashboard</h1>
           
           <div className="flex items-center gap-3">
             {/* Time Filter */}
-            <div className="flex items-center bg-[#1e293b] rounded-lg border border-[#334155] p-1">
+            <div className="flex items-center bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] p-1">
               {['1h', '6h', '24h'].map(t => (
                 <button
                   key={t}
                   onClick={() => setTimeFilter(t)}
                   className={`px-3 py-1 rounded text-[12px] font-bold transition-colors ${
-                    timeFilter === t ? 'bg-[#3b82f6] text-white' : 'text-[#94a3b8] hover:text-white hover:bg-[#334155]/50'
+                    timeFilter === t ? 'bg-[#3b82f6] text-white' : 'text-[#64748b] dark:text-[#94a3b8] hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#334155]/50'
                   }`}
                 >
                   {t}
@@ -88,7 +88,7 @@ export default function Dashboard() {
             <select
               value={serviceFilter}
               onChange={(e) => setServiceFilter(e.target.value)}
-              className="bg-[#1e293b] border border-[#334155] text-white text-[13px] font-bold rounded-lg px-3 py-1.5 outline-none focus:border-[#3b82f6] min-w-[160px]"
+              className="bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] text-gray-800 dark:text-white text-[13px] font-bold rounded-lg px-3 py-1.5 outline-none focus:border-[#3b82f6] min-w-[160px]"
             >
               <option value="All Services">All Services</option>
               {availableServices.map(s => (
@@ -96,7 +96,7 @@ export default function Dashboard() {
               ))}
             </select>
 
-            <button className="flex items-center gap-2 border border-[#334155] bg-[#1e293b] hover:bg-[#334155]/50 rounded-lg px-4 py-1.5 text-[13px] font-bold text-white shadow-sm transition-colors">
+            <button className="flex items-center gap-2 border border-[#e2e8f0] dark:border-[#334155] bg-white dark:bg-[#1e293b] hover:bg-gray-100 dark:hover:bg-[#334155]/50 rounded-lg px-4 py-1.5 text-[13px] font-bold text-gray-800 dark:text-white shadow-sm transition-colors">
               <DownloadIcon /> Export Report
             </button>
           </div>
@@ -129,8 +129,8 @@ export default function Dashboard() {
         {/* Left Column (65%) */}
         <div className="lg:col-span-2 space-y-6 flex flex-col">
           
-          <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-5 shadow-sm">
-            <h2 className="text-[15px] font-bold text-white uppercase tracking-wider mb-4">Service Health Overview</h2>
+          <div className="bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-xl p-5 shadow-sm">
+            <h2 className="text-[15px] font-bold text-gray-800 dark:text-white uppercase tracking-wider mb-4">Service Health Overview</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {availableServices.filter(s => serviceFilter === 'All Services' || s === serviceFilter).map(srv => {
                 const stat = latestServiceStats.find(s => s.service_name === srv)

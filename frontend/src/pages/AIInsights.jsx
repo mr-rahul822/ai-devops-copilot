@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -56,15 +56,10 @@ export default function AIInsights() {
     queryKey: ['aiInsightsServices'],
     queryFn: async () => {
       const res = await getServices(DEFAULT_USER_ID)
-      const list = res.data?.services || res.data || []
-      return Array.isArray(list) ? list : []
+      const raw = res.data?.services || res.data?.metrics || res.data || []
+      return Array.isArray(raw) ? raw : []
     },
     refetchInterval: 60_000,
-    onSuccess: (data) => {
-      if (data.length > 0 && !selectedService) {
-        setSelectedService(typeof data[0] === 'string' ? data[0] : data[0]?.service_name || data[0]?.name || '')
-      }
-    },
   })
 
   const services = useMemo(() => {
@@ -73,11 +68,11 @@ export default function AIInsights() {
   }, [servicesData])
 
   // Auto-select first service on load
-  useState(() => {
+  useEffect(() => {
     if (services.length > 0 && !selectedService) {
       setSelectedService(services[0])
     }
-  }, [services])
+  }, [services, selectedService])
 
   // ── Run Analysis ───────────────────────────────────────────────────────
   const handleRunAnalysis = async () => {
@@ -194,8 +189,8 @@ export default function AIInsights() {
       {/* ── Top Bar ────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-[#0f172a]">AI Insights</h1>
-          <p className="text-[13px] text-[#64748b] mt-1">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">AI Insights</h1>
+          <p className="text-[13px] text-gray-500 dark:text-[#64748b] mt-1">
             AI-powered diagnosis for your connected infrastructure
           </p>
         </div>
@@ -204,7 +199,7 @@ export default function AIInsights() {
             id="service-selector"
             value={selectedService}
             onChange={e => setSelectedService(e.target.value)}
-            className="bg-white border border-[#e2e8f0] text-[#0f172a] px-3 py-2 rounded-lg text-[13px] font-medium outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] transition-all"
+            className="bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] text-gray-800 dark:text-white px-3 py-2 rounded-lg text-[13px] font-medium outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] transition-all"
           >
             {services.length === 0 && <option value="">Loading services...</option>}
             {services.map(s => (
@@ -240,12 +235,12 @@ export default function AIInsights() {
 
           {/* ── Empty State ─────────────────────────────────────────────── */}
           {!analysis && !analyzing && !analysisError && (
-            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm p-12 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-[#eff6ff] flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-12 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 rounded-full bg-[#eff6ff] dark:bg-blue-950/40 flex items-center justify-center mb-4">
                 <SparklesBlueIcon large />
               </div>
-              <h2 className="text-lg font-bold text-[#0f172a] mb-2">No analysis yet</h2>
-              <p className="text-[14px] text-[#64748b] max-w-md">
+              <h2 className="text-lg font-bold text-[#0f172a] dark:text-white mb-2">No analysis yet</h2>
+              <p className="text-[14px] text-gray-500 dark:text-[#64748b] max-w-md">
                 Select a service and click <strong>Run Analysis</strong> to get an AI-powered diagnosis of your infrastructure.
               </p>
             </div>
@@ -253,10 +248,10 @@ export default function AIInsights() {
 
           {/* ── Loading State ──────────────────────────────────────────── */}
           {analyzing && (
-            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm p-12 flex flex-col items-center justify-center text-center">
+            <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-12 flex flex-col items-center justify-center text-center">
               <LoadingSpinner size="lg" className="mb-4" />
-              <h2 className="text-lg font-bold text-[#0f172a] mb-2">Running 4-agent analysis pipeline...</h2>
-              <p className="text-[14px] text-[#64748b]">
+              <h2 className="text-lg font-bold text-[#0f172a] dark:text-white mb-2">Running 4-agent analysis pipeline...</h2>
+              <p className="text-[14px] text-gray-500 dark:text-[#64748b]">
                 Analyzing logs, metrics, past incidents, and generating recommendations. This can take 10-30 seconds.
               </p>
             </div>
@@ -264,14 +259,14 @@ export default function AIInsights() {
 
           {/* ── Error State ────────────────────────────────────────────── */}
           {analysisError && !analyzing && (
-            <div className="bg-[#fef2f2] rounded-lg border border-[#ef4444]/20 shadow-sm p-6">
+            <div className="bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900/30 shadow-sm p-6">
               <div className="flex items-center gap-2 mb-2">
                 <svg className="w-5 h-5 text-[#ef4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <h2 className="text-[15px] font-bold text-[#ef4444]">Analysis Failed</h2>
               </div>
-              <p className="text-[14px] text-[#991b1b]">{analysisError}</p>
+              <p className="text-[14px] text-red-800 dark:text-red-400">{analysisError}</p>
               <button onClick={handleRunAnalysis} className="mt-3 text-[13px] text-[#ef4444] underline hover:no-underline">
                 Try again
               </button>
@@ -280,14 +275,14 @@ export default function AIInsights() {
 
           {/* ── Partial Diagnosis Warning ──────────────────────────────── */}
           {isPartial && (
-            <div className="bg-[#fefce8] rounded-lg border border-[#ca8a04]/20 shadow-sm p-5">
+            <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-900/30 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-1">
                 <svg className="w-5 h-5 text-[#ca8a04]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <h3 className="text-[14px] font-bold text-[#ca8a04]">Partial Diagnosis</h3>
               </div>
-              <p className="text-[13px] text-[#92400e]">
+              <p className="text-[13px] text-amber-800 dark:text-amber-400">
                 AI decision engine returned a partial result — log and metrics analysis completed but the recommendation step failed. Try running the analysis again.
               </p>
             </div>
@@ -295,9 +290,9 @@ export default function AIInsights() {
 
           {/* ── AI Diagnosis Card ──────────────────────────────────────── */}
           {analysis && decision && (
-            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-[#e2e8f0] flex items-center justify-between bg-[#f8fafc]">
-                <h2 className="text-[15px] font-bold text-[#0f172a] flex items-center gap-2">
+            <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155] flex items-center justify-between bg-[#f8fafc] dark:bg-[#161b22]">
+                <h2 className="text-[15px] font-bold text-gray-800 dark:text-white flex items-center gap-2">
                   <SparklesBlueIcon /> AI Diagnosis
                 </h2>
                 <div className="flex items-center gap-2">
@@ -305,7 +300,7 @@ export default function AIInsights() {
                     {severity}
                   </span>
                   {decision.confidence != null && (
-                    <span className="bg-[#f0fdf4] text-[#16a34a] border border-[#16a34a]/20 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider">
+                    <span className="bg-[#f0fdf4] dark:bg-[#1c3d27] text-[#16a34a] dark:text-[#4ade80] border border-[#16a34a]/20 dark:border-[#4ade80]/20 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider">
                       {Math.round(decision.confidence * 100)}% confidence
                     </span>
                   )}
@@ -314,22 +309,22 @@ export default function AIInsights() {
               <div className="p-5 space-y-4">
                 {decision.root_cause && (
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Root Cause</h3>
-                    <p className="text-[14px] text-[#0f172a] leading-relaxed">{decision.root_cause}</p>
+                    <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-1">Root Cause</h3>
+                    <p className="text-[14px] text-gray-800 dark:text-white leading-relaxed">{decision.root_cause}</p>
                   </div>
                 )}
                 {decision.simple_explanation && (
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">In Simple Terms</h3>
-                    <p className="text-[14px] text-[#475569] leading-relaxed">{decision.simple_explanation}</p>
+                    <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-1">In Simple Terms</h3>
+                    <p className="text-[14px] text-gray-600 dark:text-gray-300 leading-relaxed">{decision.simple_explanation}</p>
                   </div>
                 )}
                 {decision.time_to_fix && (
-                  <div className="flex items-center gap-2 text-[13px] text-[#64748b]">
+                  <div className="flex items-center gap-2 text-[13px] text-[#64748b] dark:text-gray-400">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Estimated fix time: <strong className="text-[#0f172a]">{decision.time_to_fix}</strong></span>
+                    <span>Estimated fix time: <strong className="text-gray-800 dark:text-white">{decision.time_to_fix}</strong></span>
                   </div>
                 )}
               </div>
@@ -338,32 +333,32 @@ export default function AIInsights() {
 
           {/* ── Context & Evidence Card ─────────────────────────────────── */}
           {analysis && (
-            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm">
-              <div className="p-5 border-b border-[#e2e8f0]">
-                <h2 className="text-[15px] font-bold text-[#0f172a]">Context & Evidence</h2>
+            <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] shadow-sm">
+              <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155]">
+                <h2 className="text-[15px] font-bold text-gray-800 dark:text-white">Context & Evidence</h2>
               </div>
               <div className="p-5 space-y-5">
                 {/* Real CPU/RAM chart */}
                 <div>
-                  <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-3">
+                  <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-3">
                     CPU & RAM — Last 1 Hour ({selectedService})
                   </h3>
                   {metricsChartData.length > 0 ? (
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                         <LineChart data={metricsChartData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
                           <XAxis
                             dataKey="time"
-                            stroke="#64748b"
-                            tick={{ fill: '#64748b', fontSize: 11 }}
+                            stroke="var(--chart-axis)"
+                            tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
                             tickLine={false}
                             axisLine={false}
                             minTickGap={30}
                           />
                           <YAxis
-                            stroke="#64748b"
-                            tick={{ fill: '#64748b', fontSize: 11 }}
+                            stroke="var(--chart-axis)"
+                            tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
                             tickLine={false}
                             axisLine={false}
                             domain={[0, 100]}
@@ -371,11 +366,11 @@ export default function AIInsights() {
                           />
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                              borderColor: '#334155',
+                              backgroundColor: 'var(--chart-tooltip-bg)',
+                              borderColor: 'var(--chart-tooltip-border)',
                               borderRadius: '8px',
                               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                              color: '#f8fafc',
+                              color: 'var(--chart-tooltip-text)',
                               fontSize: '12px',
                             }}
                           />
@@ -386,7 +381,7 @@ export default function AIInsights() {
                       </ResponsiveContainer>
                     </div>
                   ) : (
-                    <div className="h-[120px] bg-[#f8fafc] border border-[#e2e8f0] rounded-lg flex items-center justify-center text-[13px] text-[#64748b]">
+                    <div className="h-[120px] bg-[#f8fafc] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155] rounded-lg flex items-center justify-center text-[13px] text-[#64748b] dark:text-gray-400">
                       No metrics history data available
                     </div>
                   )}
@@ -416,8 +411,8 @@ export default function AIInsights() {
                 {/* Log Analysis output (Agent 1) */}
                 {analysis.log_analysis && (
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Log Analysis Agent Output</h3>
-                    <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 text-[13px] text-[#334155]">
+                    <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-2">Log Analysis Agent Output</h3>
+                    <div className="bg-[#f8fafc] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155] rounded-lg p-4 text-[13px] text-[#334155] dark:text-gray-300">
                       {typeof analysis.log_analysis === 'string'
                         ? analysis.log_analysis
                         : <pre className="whitespace-pre-wrap text-[12px]">{JSON.stringify(analysis.log_analysis, null, 2)}</pre>
@@ -429,8 +424,8 @@ export default function AIInsights() {
                 {/* Metrics Analysis output (Agent 2) */}
                 {analysis.metrics_analysis && (
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-2">Metrics Analysis Agent Output</h3>
-                    <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 text-[13px] text-[#334155]">
+                    <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-2">Metrics Analysis Agent Output</h3>
+                    <div className="bg-[#f8fafc] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155] rounded-lg p-4 text-[13px] text-[#334155] dark:text-gray-300">
                       {analysis.metrics_analysis.anomaly_score != null && (
                         <p className="mb-1">Anomaly Score: <strong>{analysis.metrics_analysis.anomaly_score}</strong></p>
                       )}
@@ -447,9 +442,9 @@ export default function AIInsights() {
 
           {/* ── Recommended Fix Card ───────────────────────────────────── */}
           {analysis && decision && decision.fix_steps && (
-            <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
-                <h2 className="text-[15px] font-bold text-[#0f172a] flex items-center gap-2">
+            <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#161b22] flex items-center justify-between">
+                <h2 className="text-[15px] font-bold text-gray-800 dark:text-white flex items-center gap-2">
                   <LightningIcon className="text-[#2563eb]" /> Recommended Fix
                 </h2>
                 {riskLevel && (
@@ -462,14 +457,14 @@ export default function AIInsights() {
                 {/* Action + target */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Recommended Action</h3>
-                    <p className="text-[14px] text-[#0f172a] font-mono bg-[#f1f5f9] px-3 py-2 rounded border border-[#e2e8f0]">
+                    <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-1">Recommended Action</h3>
+                    <p className="text-[14px] text-[#0f172a] dark:text-white font-mono bg-[#f1f5f9] dark:bg-[#0f172a] px-3 py-2 rounded border border-[#e2e8f0] dark:border-[#334155]">
                       {decision.recommended_action || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Action Target</h3>
-                    <p className="text-[14px] text-[#0f172a] font-mono bg-[#f1f5f9] px-3 py-2 rounded border border-[#e2e8f0]">
+                    <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-1">Action Target</h3>
+                    <p className="text-[14px] text-[#0f172a] dark:text-white font-mono bg-[#f1f5f9] dark:bg-[#0f172a] px-3 py-2 rounded border border-[#e2e8f0] dark:border-[#334155]">
                       {decision.action_target || selectedService}
                     </p>
                   </div>
@@ -477,14 +472,14 @@ export default function AIInsights() {
 
                 {/* Fix steps (numbered list) */}
                 <div>
-                  <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-3">Fix Steps</h3>
+                  <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-3">Fix Steps</h3>
                   <ol className="space-y-2">
                     {decision.fix_steps.map((step, i) => (
                       <li key={i} className="flex gap-3 items-start">
                         <span className="shrink-0 w-6 h-6 rounded-full bg-[#2563eb] text-white text-[12px] font-bold flex items-center justify-center mt-0.5">
                           {i + 1}
                         </span>
-                        <p className="text-[14px] text-[#334155] leading-relaxed">{step}</p>
+                        <p className="text-[14px] text-[#334155] dark:text-gray-300 leading-relaxed">{step}</p>
                       </li>
                     ))}
                   </ol>
@@ -493,8 +488,8 @@ export default function AIInsights() {
                 {/* Reasoning */}
                 {decision.reasoning && (
                   <div>
-                    <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-wider mb-1">Reasoning</h3>
-                    <p className="text-[13px] text-[#475569] italic">{decision.reasoning}</p>
+                    <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-1">Reasoning</h3>
+                    <p className="text-[13px] text-[#475569] dark:text-gray-400 italic">{decision.reasoning}</p>
                   </div>
                 )}
 
@@ -517,12 +512,12 @@ export default function AIInsights() {
         </div>
 
         {/* ── Right Column: Chat ──────────────────────────────────────── */}
-        <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm flex flex-col h-full overflow-hidden">
-          <div className="p-4 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center gap-2 shrink-0">
+        <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] flex flex-col h-full overflow-hidden">
+          <div className="p-4 border-b border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#161b22] flex items-center gap-2 shrink-0">
             <img src="/logo.png" className="w-6 h-6 rounded shrink-0 object-contain" alt="Cloudy Bro" />
-            <h2 className="text-[15px] font-bold text-[#0f172a]">Cloudy Bro Assistant</h2>
+            <h2 className="text-[15px] font-bold text-gray-800 dark:text-white">Cloudy Bro Assistant</h2>
             {selectedService && (
-              <span className="ml-auto text-[10px] bg-[#f1f5f9] text-[#64748b] px-2 py-1 rounded">
+              <span className="ml-auto text-[10px] bg-[#f1f5f9] dark:bg-[#0f172a] text-[#64748b] dark:text-gray-400 px-2 py-1 rounded">
                 {selectedService}
               </span>
             )}

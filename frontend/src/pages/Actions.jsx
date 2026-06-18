@@ -159,7 +159,8 @@ export default function Actions() {
                           <div className="font-semibold text-[#0f172a] dark:text-gray-100">{action.target_service}</div>
                           {action.incident_id && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#eff6ff] dark:bg-[#1e3a5f] text-[#2563eb] dark:text-blue-400 border border-[#2563eb]/20 mt-1">
-                              ✦ AI Recommended
+                              <svg className="w-3 h-3 text-[#2563eb] dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+                              AI Recommended
                             </span>
                           )}
                         </td>
@@ -207,9 +208,10 @@ export default function Actions() {
                   {activeAction.incident_id && (
                     <div className="mt-2 flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#eff6ff] dark:bg-[#1e3a5f] text-[#2563eb] dark:text-blue-400 border border-[#2563eb]/20">
-                        ✦ AI Recommended
+                        <svg className="w-3 h-3 text-[#2563eb] dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+                        AI Recommended
                       </span>
-                      <p className="text-[11px] text-[#94a3b8]">
+                      <p className="text-[11px] text-[#94a3b8] dark:text-gray-400">
                         Recommended by AI analysis · Outcome will improve future diagnoses
                       </p>
                     </div>
@@ -303,8 +305,10 @@ export default function Actions() {
       {confirmAction && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#e2e8f0] dark:border-gray-700 max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">⚠</span>
+            <div className="flex items-center gap-2.5 mb-4">
+              <svg className="w-6 h-6 text-[#ef4444] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
               <h2 className="text-lg font-bold text-[#ef4444]">High Risk Action</h2>
             </div>
 

@@ -23,29 +23,31 @@ logger = logging.getLogger(__name__)
 
 async def _verify_token(authorization: str) -> dict:
     """
-    Calls auth-service GET /auth/me to validate the Bearer token.
-    Returns the user payload or raises HTTPException.
+    Verifies the JWT token locally using the configured secret key.
     """
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or malformed Authorization header.")
 
+    token = authorization.split(" ", 1)[1]
+    import jwt
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(
-                f"{settings.auth_service_url}/auth/me",
-                headers={"Authorization": authorization},
-            )
-    except httpx.ConnectError:
-        raise HTTPException(status_code=503, detail="Auth service is unreachable.")
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=503, detail="Auth service timed out.")
-
-    if response.status_code == 401:
+        decoded = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
-    if response.status_code != 200:
-        raise HTTPException(status_code=503, detail="Auth service returned an unexpected error.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
 
-    return response.json()
+    user_id = decoded.get("userId")
+    email = decoded.get("email")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+
+    return {
+        "user": {
+            "id": user_id,
+            "email": email
+        }
+    }
 
 
 # ---------------------------------------------------------------------------

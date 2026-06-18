@@ -58,10 +58,10 @@ async function fireAlert({ user_id, service_name, alert_type, severity, message,
  * Returns alerts for a user, optionally filtered by status and/or severity.
  * Always ordered newest-first.
  */
-async function getAlerts({ user_id, status, severity }) {
-  const conditions = ['user_id = $1'];
-  const params = [user_id];
-  let idx = 2;
+async function getAlerts({ user_id, status, severity } = {}) {
+  const conditions = [];
+  const params = [];
+  let idx = 1;
 
   if (status) {
     conditions.push(`status = $${idx++}`);
@@ -72,9 +72,10 @@ async function getAlerts({ user_id, status, severity }) {
     params.push(severity);
   }
 
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const result = await db.query(
     `SELECT * FROM alerts
-     WHERE ${conditions.join(' AND ')}
+     ${whereClause}
      ORDER BY created_at DESC`,
     params
   );
@@ -114,9 +115,7 @@ async function getSummary(userId) {
        COUNT(*) FILTER (WHERE status = 'open' AND severity = 'HIGH')                      AS high,
        COUNT(*) FILTER (WHERE status = 'open' AND severity = 'MEDIUM')                    AS medium,
        COUNT(*) FILTER (WHERE status = 'resolved' AND resolved_at >= NOW() - INTERVAL '24 hours') AS resolved_today
-     FROM alerts
-     WHERE user_id = $1`,
-    [userId]
+     FROM alerts`
   );
 
   // pg returns counts as strings — convert to numbers
