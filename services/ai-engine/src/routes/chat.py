@@ -5,30 +5,28 @@ src/routes/chat.py — POST /ai/chat endpoint.
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 
 from src.schemas import ChatRequest, ChatResponse
+from src.middleware.verify_token import verify_token
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["chat"])
 
 
-def _extract_token(authorization: Optional[str]) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or malformed Authorization header.")
-    return authorization.split(" ", 1)[1]
-
-
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     body: ChatRequest,
     authorization: Optional[str] = Header(default=None),
+    auth_user_id: str = Depends(verify_token),
 ):
     """
     Conversational endpoint — fetches context and calls Claude.
     """
-    token = _extract_token(authorization)
+    # Enforce tenant isolation — overwrite user_id in the body with the authenticated user ID
+    body.user_id = auth_user_id
+    token = authorization.split(" ", 1)[1]
 
     from src.main import chat_service
 

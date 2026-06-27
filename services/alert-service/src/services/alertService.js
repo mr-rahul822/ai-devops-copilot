@@ -51,17 +51,17 @@ async function fireAlert({ user_id, service_name, alert_type, severity, message,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Read operations
+// Read operations — ALL scoped by user_id for multi-tenant isolation
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Returns alerts for a user, optionally filtered by status and/or severity.
- * Always ordered newest-first.
+ * Always ordered newest-first. user_id is REQUIRED for tenant isolation.
  */
 async function getAlerts({ user_id, status, severity } = {}) {
-  const conditions = [];
-  const params = [];
-  let idx = 1;
+  const conditions = ['user_id = $1'];
+  const params = [user_id];
+  let idx = 2;
 
   if (status) {
     conditions.push(`status = $${idx++}`);
@@ -72,7 +72,7 @@ async function getAlerts({ user_id, status, severity } = {}) {
     params.push(severity);
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
   const result = await db.query(
     `SELECT * FROM alerts
      ${whereClause}
@@ -83,29 +83,35 @@ async function getAlerts({ user_id, status, severity } = {}) {
 }
 
 /**
- * Returns a single alert by its UUID.
+ * Returns a single alert by its UUID, scoped to the authenticated user.
+ * Returns null if the alert doesn't exist OR doesn't belong to this user.
  */
-async function getAlertById(id) {
-  const result = await db.query('SELECT * FROM alerts WHERE id = $1', [id]);
-  return result.rows[0] || null;
-}
-
-/**
- * Marks an alert as resolved and records the resolution time.
- */
-async function resolveAlert(id) {
+async function getAlertById(id, userId) {
   const result = await db.query(
-    `UPDATE alerts
-     SET status = 'resolved', resolved_at = NOW()
-     WHERE id = $1
-     RETURNING *`,
-    [id]
+    'SELECT * FROM alerts WHERE id = $1 AND user_id = $2',
+    [id, userId]
   );
   return result.rows[0] || null;
 }
 
 /**
- * Returns aggregate counts for the dashboard summary badge.
+ * Marks an alert as resolved and records the resolution time.
+ * Only resolves if the alert belongs to the authenticated user.
+ */
+async function resolveAlert(id, userId) {
+  const result = await db.query(
+    `UPDATE alerts
+     SET status = 'resolved', resolved_at = NOW()
+     WHERE id = $1 AND user_id = $2
+     RETURNING *`,
+    [id, userId]
+  );
+  return result.rows[0] || null;
+}
+
+/**
+ * Returns aggregate counts for the dashboard summary badge,
+ * scoped to the authenticated user.
  */
 async function getSummary(userId) {
   const result = await db.query(
@@ -115,7 +121,9 @@ async function getSummary(userId) {
        COUNT(*) FILTER (WHERE status = 'open' AND severity = 'HIGH')                      AS high,
        COUNT(*) FILTER (WHERE status = 'open' AND severity = 'MEDIUM')                    AS medium,
        COUNT(*) FILTER (WHERE status = 'resolved' AND resolved_at >= NOW() - INTERVAL '24 hours') AS resolved_today
-     FROM alerts`
+     FROM alerts
+     WHERE user_id = $1`,
+    [userId]
   );
 
   // pg returns counts as strings — convert to numbers

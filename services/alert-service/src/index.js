@@ -8,6 +8,7 @@ const db = require('./config/db');
 const kafkaConsumer = require('./kafka/consumer');
 const alertRoutes = require('./routes/alerts');
 const { checkSilentServices } = require('./engine/alertEngine');
+const { helmetMiddleware, securityHeaders } = require('./middleware/security');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -16,7 +17,12 @@ const PORT = process.env.PORT || 3003;
 // Middleware
 // ─────────────────────────────────────────────────────────────────────────────
 
-app.use(cors());
+app.use(helmetMiddleware);
+app.use(securityHeaders);
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
 
 // ─────────────────────────────────────────────────────────────────────────────

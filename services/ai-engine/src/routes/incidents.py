@@ -11,23 +11,17 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
 from src.models import Incident
 from src.schemas import IncidentOut, ResolveRequest
+from src.middleware.verify_token import verify_token
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(prefix="/ai", tags=["incidents"])
-
-
-def _extract_token(authorization: Optional[str]) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or malformed Authorization header.")
-    return authorization.split(" ", 1)[1]
 
 
 # ── Serialiser helper ────────────────────────────────────────────────────
@@ -60,14 +54,13 @@ def _to_out(row: Incident) -> IncidentOut:
 
 @router.get("/incidents", response_model=list[IncidentOut])
 async def list_incidents(
-    user_id: str = Query(default="00000000-0000-0000-0000-000000000001"),
     status: Optional[str] = Query(default=None),
-    authorization: Optional[str] = Header(default=None),
+    auth_user_id: str = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
 ):
-    _extract_token(authorization)  # verify JWT present
+    user_uuid = uuid.UUID(auth_user_id)
 
-    stmt = select(Incident).where(Incident.user_id == uuid.UUID(user_id))
+    stmt = select(Incident).where(Incident.user_id == user_uuid)
     if status:
         stmt = stmt.where(Incident.status == status)
     stmt = stmt.order_by(Incident.created_at.desc())
@@ -82,13 +75,16 @@ async def list_incidents(
 @router.get("/incidents/{incident_id}", response_model=IncidentOut)
 async def get_incident(
     incident_id: str,
-    authorization: Optional[str] = Header(default=None),
+    auth_user_id: str = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
 ):
-    _extract_token(authorization)
+    user_uuid = uuid.UUID(auth_user_id)
 
     result = await db.execute(
-        select(Incident).where(Incident.id == uuid.UUID(incident_id))
+        select(Incident).where(
+            Incident.id == uuid.UUID(incident_id),
+            Incident.user_id == user_uuid,
+        )
     )
     row = result.scalars().first()
     if not row:
@@ -102,7 +98,7 @@ async def get_incident(
 async def resolve_incident(
     incident_id: str,
     body: ResolveRequest,
-    authorization: Optional[str] = Header(default=None),
+    auth_user_id: str = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -110,10 +106,13 @@ async def resolve_incident(
     THIS IS HOW THE AI LEARNS — every resolved incident becomes
     a vector in Pinecone for future RAG lookups.
     """
-    _extract_token(authorization)
+    user_uuid = uuid.UUID(auth_user_id)
 
     result = await db.execute(
-        select(Incident).where(Incident.id == uuid.UUID(incident_id))
+        select(Incident).where(
+            Incident.id == uuid.UUID(incident_id),
+            Incident.user_id == user_uuid,
+        )
     )
     row = result.scalars().first()
     if not row:

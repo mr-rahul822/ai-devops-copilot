@@ -17,7 +17,7 @@ async function verifyToken(req, res, next) {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     // Check if token is blacklisted (logged out)
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');

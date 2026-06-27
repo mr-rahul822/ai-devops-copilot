@@ -11,13 +11,19 @@ const alertService = require('../services/alertService');
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET /alerts?user_id=&status=&severity=
+// GET /alerts?status=&severity=
 // ─────────────────────────────────────────────────────────────────────────────
 
 const getAlerts = wrap(async (req, res) => {
+  // req.user is set by verifyToken middleware: { userId, email, iat, exp }
+  const userId = req.user?.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'Cannot resolve user ID from token.' });
+  }
+
   const { status, severity } = req.query;
 
-  const alerts = await alertService.getAlerts({ status, severity });
+  const alerts = await alertService.getAlerts({ user_id: userId, status, severity });
   return res.status(200).json({ alerts, count: alerts.length });
 });
 
@@ -26,7 +32,12 @@ const getAlerts = wrap(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const getAlertById = wrap(async (req, res) => {
-  const alert = await alertService.getAlertById(req.params.id);
+  const userId = req.user?.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'Cannot resolve user ID from token.' });
+  }
+
+  const alert = await alertService.getAlertById(req.params.id, userId);
   if (!alert) {
     return res.status(404).json({ error: `Alert ${req.params.id} not found.` });
   }
@@ -38,7 +49,12 @@ const getAlertById = wrap(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const resolveAlert = wrap(async (req, res) => {
-  const alert = await alertService.resolveAlert(req.params.id);
+  const userId = req.user?.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'Cannot resolve user ID from token.' });
+  }
+
+  const alert = await alertService.resolveAlert(req.params.id, userId);
   if (!alert) {
     return res.status(404).json({ error: `Alert ${req.params.id} not found.` });
   }
@@ -46,11 +62,16 @@ const resolveAlert = wrap(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET /alerts/summary?user_id=
+// GET /alerts/summary
 // ─────────────────────────────────────────────────────────────────────────────
 
 const getSummary = wrap(async (req, res) => {
-  const summary = await alertService.getSummary();
+  const userId = req.user?.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'Cannot resolve user ID from token.' });
+  }
+
+  const summary = await alertService.getSummary(userId);
   return res.status(200).json(summary);
 });
 

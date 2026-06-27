@@ -8,8 +8,9 @@ Protected by JWT (verified via auth-service, same pattern as diagnose.py).
 import logging
 from typing import Optional, List
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
+from src.middleware.verify_token import verify_token
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class MetricsHistoryItem(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
-    user_id: str
+    user_id: Optional[str] = ""
     service_name: str
     alert_id: Optional[str] = None
     alert_type: Optional[str] = "UNKNOWN"
@@ -35,20 +36,13 @@ class AnalyzeRequest(BaseModel):
     metrics_history: List[MetricsHistoryItem] = Field(default_factory=list)
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────
-
-def _extract_token(authorization: Optional[str]) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or malformed Authorization header.")
-    return authorization.split(" ", 1)[1]
-
-
 # ── Endpoint ─────────────────────────────────────────────────────────────
 
 @router.post("/analyze")
 async def analyze(
     body: AnalyzeRequest,
     authorization: Optional[str] = Header(default=None),
+    auth_user_id: str = Depends(verify_token),
 ):
     """
     Run the full multi-agent analysis pipeline.
@@ -58,7 +52,9 @@ async def analyze(
     Agent 3 (Decision)        → Claude LLM call
     Agent 4 (Executor)        → action plan preparation (no execution)
     """
-    _extract_token(authorization)  # enforce JWT presence
+    # Enforce tenant isolation — overwrite user_id in the body with the authenticated user ID
+    body.user_id = auth_user_id
+    token = authorization.split(" ", 1)[1]
 
     # Import the singleton created in main.py during lifespan startup
     from src.main import orchestrator
@@ -78,7 +74,7 @@ async def analyze(
     }
 
     try:
-        result = await orchestrator.run(input_data)
+        result = await orchestrator.run(input_data, token=token)
     except Exception as exc:
         logger.error("Multi-agent pipeline failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=503, detail=f"AI decision unavailable, retry in 30 seconds: {exc}")

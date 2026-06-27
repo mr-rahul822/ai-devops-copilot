@@ -29,6 +29,22 @@ import json
 import logging
 import time
 import uuid
+import os
+import httpx
+import base64
+
+def _extract_user_id_from_jwt(token: str) -> str:
+    try:
+        parts = token.split(".")
+        if len(parts) >= 2:
+            payload_b64 = parts[1]
+            payload_b64 += "=" * (4 - len(payload_b64) % 4)
+            payload_bytes = base64.b64decode(payload_b64.replace("-", "+").replace("_", "/"))
+            payload = json.loads(payload_bytes.decode("utf-8"))
+            return payload.get("userId") or payload.get("user_id") or payload.get("sub") or ""
+    except Exception:
+        pass
+    return ""
 
 from src.agents.log_analyzer_agent import LogAnalyzerAgent
 from src.agents.metrics_analyzer_agent import MetricsAnalyzerAgent
@@ -57,7 +73,7 @@ class AgentOrchestrator:
         self._decision_agent = DecisionAgent(claude_client, retriever)
         self._executor_agent = ExecutorAgent()
 
-    async def run(self, input_data: dict) -> dict:
+    async def run(self, input_data: dict, token: str | None = None) -> dict:
         """
         Execute the full 4-agent pipeline.
 
@@ -200,6 +216,42 @@ class AgentOrchestrator:
                 "action_plan": action_plan,
             },
         )
+
+        # ── Register Action Plan in Action Service ────────────────────────
+        if token and action_plan and action_plan.get("action_plan"):
+            plan_details = action_plan["action_plan"]
+            executor = plan_details.get("executor")
+            if executor in ["docker", "aws"]:
+                try:
+                    # Extract user_id from JWT or fallback to UUID to avoid 500 error
+                    resolved_user_id = _extract_user_id_from_jwt(token) or user_id or str(uuid.uuid4())
+                    action_payload = {
+                        "user_id": resolved_user_id,
+                        "action_type": plan_details.get("command"),
+                        "target_service": plan_details.get("target"),
+                        "executor_type": executor,
+                        "risk_level": action_plan.get("risk_level", "MEDIUM"),
+                        "requires_approval": action_plan.get("requires_approval", True),
+                        "params": plan_details.get("params", {}),
+                        "incident_id": incident_id,
+                    }
+                    action_service_url = os.getenv("ACTION_SERVICE_URL", "http://action-service:8003")
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        resp = await client.post(
+                            f"{action_service_url}/actions/execute",
+                            json=action_payload,
+                            headers={"Authorization": f"Bearer {token}"},
+                        )
+                        if resp.status_code in [200, 201]:
+                            logger.info("Successfully registered action plan with Action Service.")
+                        else:
+                            logger.warning(
+                                "Failed to register action plan. Action service returned status: %d, body: %s",
+                                resp.status_code,
+                                resp.text,
+                            )
+                except Exception as exc:
+                    logger.warning("Error registering action plan with Action Service: %s", exc)
 
         # ── Build final result ────────────────────────────────────────────
         return {

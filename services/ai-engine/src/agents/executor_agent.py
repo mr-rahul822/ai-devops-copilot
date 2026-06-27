@@ -17,20 +17,20 @@ logger = logging.getLogger(__name__)
 _ACTION_COMMANDS: dict[str, dict] = {
     "restart_container": {
         "executor": "docker",
-        "command": "restart",
+        "command": "restart_container",
     },
     "rollback_deployment": {
         "executor": "aws",
-        "command": "rollback",
+        "command": "rollback_deployment",
     },
     "scale_up": {
         "executor": "aws",
-        "command": "scale",
+        "command": "scale_service",
         "params": {"desired_count": 3},
     },
     "investigate_logs": {
-        "executor": "none",
-        "command": "fetch_logs",
+        "executor": "docker",
+        "command": "fetch_container_logs",
     },
     "no_action": {
         "executor": "none",

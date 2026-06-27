@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   LineChart,
   Line,
@@ -17,9 +17,8 @@ import { getAlerts } from '../api/alerts'
 import ChatWindow from '../components/chat/ChatWindow'
 import ChatInput from '../components/chat/ChatInput'
 import LoadingSpinner from '../components/common/LoadingSpinner'
+import useStore from '../store/useStore'
 import { format } from 'date-fns'
-
-const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001'
 
 const SEVERITY_STYLES = {
   CRITICAL: 'bg-[#fef2f2] text-[#ef4444] border-[#ef4444]/20',
@@ -36,43 +35,115 @@ const RISK_STYLES = {
   low:      'bg-[#f0fdf4] text-[#16a34a] border-[#16a34a]/20',
 }
 
+// ── Helper: extract user ID from JWT or store ──────────────────────────────
+function getUserId(user) {
+  // 1. Try from user object in store
+  if (user?.id) return user.id
+
+  // 2. Fallback: decode JWT from localStorage
+  try {
+    const token = localStorage.getItem('copilot_token')
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      if (payload.userId) return payload.userId
+      if (payload.user_id) return payload.user_id
+      if (payload.sub) return payload.sub
+    }
+  } catch (e) {
+    console.warn('[AIInsights] Could not decode JWT for user_id:', e)
+  }
+
+  // 3. Last resort — generate a temp ID so the API doesn't 422
+  return 'anonymous-' + Date.now()
+}
+
 export default function AIInsights() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const user = useStore((s) => s.user)
+  const userId = getUserId(user)
 
-  // ── State ──────────────────────────────────────────────────────────────
-  const [selectedService, setSelectedService] = useState('')
-  const [analysis, setAnalysis] = useState(null)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [analysisError, setAnalysisError] = useState('')
-  const [metricsChartData, setMetricsChartData] = useState([])
-  const [rawLogsDisplay, setRawLogsDisplay] = useState('')
+  // ── State (Persisted in Zustand) ──────────────────────────────────────
+  const selectedService = useStore((s) => s.insightsService)
+  const analysis = useStore((s) => s.insightsAnalysis)
+  const analyzing = useStore((s) => s.insightsAnalyzing)
+  const analysisError = useStore((s) => s.insightsError)
+  const metricsChartData = useStore((s) => s.insightsChartData)
+  const rawLogsDisplay = useStore((s) => s.insightsLogs)
+  const messages = useStore((s) => s.insightsMessages)
+  const setInsightsState = useStore((s) => s.setInsightsState)
 
-  // Chat state
-  const [messages, setMessages] = useState([])
   const [thinking, setThinking] = useState(false)
+
+  // Wrapped setters for compatibility
+  const setSelectedService = (val) => setInsightsState({ insightsService: val })
+  const setAnalyzing = (val) => setInsightsState({ insightsAnalyzing: val })
+  const setAnalysis = (val) => setInsightsState({ insightsAnalysis: val })
+  const setAnalysisError = (val) => setInsightsState({ insightsError: val })
+  const setMetricsChartData = (val) => setInsightsState({ insightsChartData: val })
+  const setRawLogsDisplay = (val) => setInsightsState({ insightsLogs: val })
+  const setMessages = (valOrFn) => {
+    if (typeof valOrFn === 'function') {
+      setInsightsState({ insightsMessages: valOrFn(messages) })
+    } else {
+      setInsightsState({ insightsMessages: valOrFn })
+    }
+  }
+
+  // Track if auto-run has been triggered
+  const autoRunTriggered = useRef(false)
 
   // ── Fetch services list ────────────────────────────────────────────────
   const { data: servicesData } = useQuery({
     queryKey: ['aiInsightsServices'],
     queryFn: async () => {
-      const res = await getServices(DEFAULT_USER_ID)
-      const raw = res.data?.services || res.data?.metrics || res.data || []
-      return Array.isArray(raw) ? raw : []
+      try {
+        const res = await getServices()
+        const raw = res.data?.services || res.data?.metrics || res.data || []
+        return Array.isArray(raw) ? raw : []
+      } catch (e) {
+        console.error('[AIInsights] Failed to fetch services:', e)
+        return []
+      }
     },
     refetchInterval: 60_000,
   })
 
   const services = useMemo(() => {
     if (!servicesData) return []
-    return servicesData.map(s => typeof s === 'string' ? s : s?.service_name || s?.name || '')
+    return servicesData.map(s => typeof s === 'string' ? s : s?.service_name || s?.name || '').filter(Boolean)
   }, [servicesData])
 
-  // Auto-select first service on load
+  // Handle URL params for auto-diagnose from dashboard
   useEffect(() => {
-    if (services.length > 0 && !selectedService) {
+    const serviceParam = searchParams.get('service')
+    const autorun = searchParams.get('autorun')
+
+    if (serviceParam) {
+      setSelectedService(serviceParam)
+      // Clear the URL params so refresh doesn't re-trigger
+      if (autorun === 'true') {
+        setSearchParams({}, { replace: true })
+      }
+    } else if (services.length > 0 && !selectedService) {
       setSelectedService(services[0])
     }
-  }, [services, selectedService])
+  }, [services, selectedService, searchParams, setSearchParams])
+
+  // Auto-run analysis when coming from dashboard with autorun=true
+  useEffect(() => {
+    const autorun = searchParams.get('autorun')
+    const serviceParam = searchParams.get('service')
+
+    if (autorun === 'true' && serviceParam && selectedService === serviceParam && !autoRunTriggered.current && !analyzing) {
+      autoRunTriggered.current = true
+      // Small delay to let the component fully mount
+      const timer = setTimeout(() => {
+        handleRunAnalysis()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [selectedService, searchParams, analyzing])
 
   // ── Run Analysis ───────────────────────────────────────────────────────
   const handleRunAnalysis = async () => {
@@ -83,19 +154,34 @@ export default function AIInsights() {
 
     try {
       // 1. Fetch real metrics history (last 1 hour)
-      const historyRes = await getMetricsHistory({ service_name: selectedService, hours: 1 })
-      const history = historyRes.data?.metrics || historyRes.data?.history || historyRes.data || []
-      const historyArr = Array.isArray(history) ? history : []
+      let historyArr = []
+      try {
+        const historyRes = await getMetricsHistory({ service_name: selectedService, hours: 1 })
+        const history = historyRes.data?.metrics || historyRes.data?.history || historyRes.data || []
+        historyArr = Array.isArray(history) ? history : []
+      } catch (e) {
+        console.warn('[AIInsights] Metrics history fetch failed, continuing:', e)
+      }
 
       // 2. Fetch latest metrics for current values
-      const latestRes = await getLatestMetrics()
-      const latestList = Array.isArray(latestRes.data) ? latestRes.data : (latestRes.data?.metrics || [])
-      const latest = latestList.find(m => (m.service_name || m.service) === selectedService) || {}
+      let latest = {}
+      try {
+        const latestRes = await getLatestMetrics()
+        const latestList = Array.isArray(latestRes.data) ? latestRes.data : (latestRes.data?.metrics || [])
+        latest = latestList.find(m => (m.service_name || m.service) === selectedService) || {}
+      } catch (e) {
+        console.warn('[AIInsights] Latest metrics fetch failed, continuing:', e)
+      }
 
       // 3. Fetch recent alerts for this service
-      const alertsRes = await getAlerts({ service_name: selectedService })
-      const alerts = alertsRes.data?.alerts || alertsRes.data || []
-      const alertsArr = Array.isArray(alerts) ? alerts : []
+      let alertsArr = []
+      try {
+        const alertsRes = await getAlerts({ service_name: selectedService })
+        const alerts = alertsRes.data?.alerts || alertsRes.data || []
+        alertsArr = Array.isArray(alerts) ? alerts : []
+      } catch (e) {
+        console.warn('[AIInsights] Alerts fetch failed, continuing:', e)
+      }
 
       // Build raw_logs context from real alert data
       const raw_logs = alertsArr.length > 0
@@ -115,9 +201,15 @@ export default function AIInsights() {
 
       // Build chart data for display
       const chartData = historyArr.map(h => {
-        const ts = h.timestamp ? new Date(h.timestamp) : null
+        let timeLabel = ''
+        try {
+          const ts = h.timestamp ? new Date(h.timestamp) : null
+          timeLabel = ts && !isNaN(ts.getTime()) ? format(ts, 'HH:mm') : ''
+        } catch (e) {
+          timeLabel = ''
+        }
         return {
-          time: ts ? format(ts, 'HH:mm') : '',
+          time: timeLabel,
           cpu: h.cpu_percent ?? 0,
           ram: h.ram_percent ?? 0,
         }
@@ -126,7 +218,7 @@ export default function AIInsights() {
 
       // 4. Call the multi-agent analysis pipeline
       const result = await analyzeIncident({
-        user_id: DEFAULT_USER_ID,
+        user_id: userId,
         service_name: selectedService,
         alert_id: alertsArr[0]?.id || null,
         alert_type: alertsArr[0]?.alert_type || 'ROUTINE_CHECK',
@@ -139,7 +231,7 @@ export default function AIInsights() {
       setAnalysis(result.data)
     } catch (err) {
       console.error('[AIInsights] Analysis failed:', err)
-      setAnalysisError(err?.response?.data?.detail || 'Analysis failed. Please try again.')
+      setAnalysisError(err?.response?.data?.detail || err?.message || 'Analysis failed. Please try again.')
     } finally {
       setAnalyzing(false)
     }
@@ -147,7 +239,8 @@ export default function AIInsights() {
 
   // ── Chat handler (real /ai/chat) ───────────────────────────────────────
   const handleSend = async (text) => {
-    const now = format(new Date(), 'HH:mm')
+    let now = ''
+    try { now = format(new Date(), 'HH:mm') } catch (e) { now = new Date().toLocaleTimeString() }
     const userMsg = { role: 'user', content: text, time: now }
     setMessages(prev => [...prev, userMsg])
     setThinking(true)
@@ -155,34 +248,42 @@ export default function AIInsights() {
     try {
       const res = await chatWithAI({
         message: text,
-        user_id: DEFAULT_USER_ID,
+        user_id: userId,
         service_name: selectedService || undefined,
         conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
       })
+
+      let replyTime = ''
+      try { replyTime = format(new Date(), 'HH:mm') } catch (e) { replyTime = new Date().toLocaleTimeString() }
+
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: res.data.reply || res.data.response || res.data.message || JSON.stringify(res.data),
-        time: format(new Date(), 'HH:mm'),
+        content: res.data?.reply || res.data?.response || res.data?.message || JSON.stringify(res.data),
+        time: replyTime,
       }])
     } catch (err) {
+      let replyTime = ''
+      try { replyTime = format(new Date(), 'HH:mm') } catch (e) { replyTime = new Date().toLocaleTimeString() }
+
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: err?.response?.data?.detail || 'AI Engine is currently unavailable.',
-        time: format(new Date(), 'HH:mm'),
+        content: err?.response?.data?.detail || 'AI Engine is currently unavailable. Please check that all services are running.',
+        time: replyTime,
       }])
     } finally {
       setThinking(false)
     }
   }
 
-  // ── Derived data from analysis ─────────────────────────────────────────
+  // ── Derived data from analysis (with safe access) ──────────────────────
   const decision = analysis?.decision || null
   const actionPlan = analysis?.action_plan || null
   const isPartial = analysis?.status === 'partial_diagnosis'
   const severity = decision?.severity || 'UNKNOWN'
   const severityStyle = SEVERITY_STYLES[severity] || SEVERITY_STYLES.UNKNOWN
-  const riskLevel = actionPlan?.risk_level?.toLowerCase() || ''
+  const riskLevel = (actionPlan?.risk_level || '').toLowerCase()
   const riskStyle = RISK_STYLES[riskLevel] || RISK_STYLES.low
+  const fixSteps = Array.isArray(decision?.fix_steps) ? decision.fix_steps : (typeof decision?.fix_steps === 'string' ? [decision.fix_steps] : [])
 
   return (
     <div className="max-w-[1400px] mx-auto h-[calc(100vh-100px)] flex flex-col">
@@ -205,6 +306,10 @@ export default function AIInsights() {
             {services.map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
+            {/* Include selectedService if not in list (e.g., from URL param) */}
+            {selectedService && !services.includes(selectedService) && (
+              <option key={selectedService} value={selectedService}>{selectedService}</option>
+            )}
           </select>
           <button
             id="run-analysis-btn"
@@ -283,7 +388,7 @@ export default function AIInsights() {
                 <h3 className="text-[14px] font-bold text-[#ca8a04]">Partial Diagnosis</h3>
               </div>
               <p className="text-[13px] text-amber-800 dark:text-amber-400">
-                AI decision engine returned a partial result — log and metrics analysis completed but the recommendation step failed. Try running the analysis again.
+                {analysis?.root_cause || 'AI decision engine returned a partial result. Try running the analysis again.'}
               </p>
             </div>
           )}
@@ -441,7 +546,7 @@ export default function AIInsights() {
           )}
 
           {/* ── Recommended Fix Card ───────────────────────────────────── */}
-          {analysis && decision && decision.fix_steps && (
+          {analysis && decision && fixSteps.length > 0 && (
             <div className="bg-white dark:bg-[#1e293b] rounded-lg border border-[#e2e8f0] dark:border-[#334155] shadow-sm overflow-hidden">
               <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155] bg-[#f8fafc] dark:bg-[#161b22] flex items-center justify-between">
                 <h2 className="text-[15px] font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -474,7 +579,7 @@ export default function AIInsights() {
                 <div>
                   <h3 className="text-[12px] font-bold text-[#64748b] dark:text-gray-400 uppercase tracking-wider mb-3">Fix Steps</h3>
                   <ol className="space-y-2">
-                    {decision.fix_steps.map((step, i) => (
+                    {fixSteps.map((step, i) => (
                       <li key={i} className="flex gap-3 items-start">
                         <span className="shrink-0 w-6 h-6 rounded-full bg-[#2563eb] text-white text-[12px] font-bold flex items-center justify-center mt-0.5">
                           {i + 1}
@@ -534,7 +639,7 @@ export default function AIInsights() {
   )
 }
 
-// ── Icon Components (unchanged) ───────────────────────────────────────────
+// ── Icon Components ───────────────────────────────────────────────────────
 
 function LightningIcon({ className = "" }) {
   return (

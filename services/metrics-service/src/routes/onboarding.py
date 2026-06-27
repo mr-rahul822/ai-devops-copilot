@@ -674,7 +674,7 @@ async def cloud_status(
     if aws_cred:
         metric_result = await db.execute(
             select(Metric.timestamp)
-            .where(Metric.source == "aws")
+            .where(Metric.source == "aws", Metric.user_id == user_id)
             .order_by(Metric.timestamp.desc())
             .limit(1)
         )
@@ -800,7 +800,7 @@ async def get_instances(
                 # Get latest metrics from DB for this instance
                 metric_result = await db.execute(
                     select(Metric)
-                    .where(Metric.service_name == name)
+                    .where(Metric.service_name == name, Metric.user_id == user_id)
                     .order_by(Metric.timestamp.desc())
                     .limit(1)
                 )

@@ -441,18 +441,27 @@ async def reject_action(
 
 @router.get("")
 async def list_actions(
-    user_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     target_service: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=100),
     user: dict = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
 ):
-    """List actions with optional filters, newest first."""
-    query = select(Action).order_by(desc(Action.created_at)).limit(limit)
+    """List actions for the authenticated user, with optional filters, newest first."""
+    # Always filter by the authenticated user's ID — never accept from query params
+    user_id_str = user.get("id") or user.get("userId") or user.get("user_id", "")
+    try:
+        user_id = uuid.UUID(str(user_id_str))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Cannot resolve user ID from token")
 
-    if user_id:
-        query = query.where(Action.user_id == uuid.UUID(user_id))
+    query = (
+        select(Action)
+        .where(Action.user_id == user_id)
+        .order_by(desc(Action.created_at))
+        .limit(limit)
+    )
+
     if status:
         query = query.where(Action.status == status)
     if target_service:
@@ -477,14 +486,21 @@ async def get_action(
     user: dict = Depends(verify_token),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get single action with full audit trail."""
+    """Get single action with full audit trail. Only returns if owned by the authenticated user."""
     try:
         aid = uuid.UUID(action_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid action_id format")
 
+    # Resolve authenticated user ID
+    user_id_str = user.get("id") or user.get("userId") or user.get("user_id", "")
+    try:
+        user_id = uuid.UUID(str(user_id_str))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Cannot resolve user ID from token")
+
     action = await db.get(Action, aid)
-    if action is None:
+    if action is None or action.user_id != user_id:
         raise HTTPException(status_code=404, detail="Action not found")
 
     audit_trail = await AuditLogger.get_action_history(aid, db)
@@ -507,15 +523,22 @@ async def get_action_logs(
 ):
     """
     Retrieve container log content from a fetch_container_logs action result.
-    Only valid when the action was fetch_container_logs.
+    Only valid when the action was fetch_container_logs and owned by the authenticated user.
     """
     try:
         aid = uuid.UUID(action_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid action_id format")
 
+    # Resolve authenticated user ID
+    user_id_str = user.get("id") or user.get("userId") or user.get("user_id", "")
+    try:
+        user_id = uuid.UUID(str(user_id_str))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Cannot resolve user ID from token")
+
     action = await db.get(Action, aid)
-    if action is None:
+    if action is None or action.user_id != user_id:
         raise HTTPException(status_code=404, detail="Action not found")
 
     if action.action_type != "fetch_container_logs":
@@ -564,6 +587,16 @@ async def delete_action(
 
     action = await db.get(Action, aid)
     if action is None:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    # Ownership check
+    user_id_str = user.get("id") or user.get("userId") or user.get("user_id", "")
+    try:
+        owner_id = uuid.UUID(str(user_id_str))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Cannot resolve user ID from token")
+
+    if action.user_id != owner_id:
         raise HTTPException(status_code=404, detail="Action not found")
 
     if action.status in ("EXECUTING", "COMPLETED"):

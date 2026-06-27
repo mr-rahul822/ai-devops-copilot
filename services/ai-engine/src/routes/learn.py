@@ -25,7 +25,7 @@ class LearnRequest(BaseModel):
     action_target: Optional[str] = None  # e.g. container name, instance id
     success: bool               # did the action fix the issue?
     outcome_message: Optional[str] = None  # result from executor
-    user_id: str = "00000000-0000-0000-0000-000000000001"
+    user_id: str  # Real user UUID from the action record — required, no default
 
 
 @router.post("/learn")

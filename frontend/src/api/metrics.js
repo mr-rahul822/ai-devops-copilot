@@ -31,12 +31,11 @@ export const getMetricsSummary = () =>
   })
 
 /**
- * Fetch distinct service names being monitored.
- *
- * @param {string} userId
+ * Fetch distinct service names being monitored for the authenticated user.
+ * The backend extracts user_id from the JWT — no query param needed.
  */
-export const getServices = (userId) =>
-  metricsClient.get('/metrics/services', { params: { user_id: userId } })
+export const getServices = () =>
+  metricsClient.get('/metrics/services')
 
 /**
  * Manually trigger a single metric collection cycle.

@@ -1,18 +1,20 @@
 import { useState } from 'react'
 import { chatWithAI } from '../../api/ai'
+import useStore from '../../store/useStore'
 
 export default function AISummary({ overallHealth }) {
   const [analyzing, setAnalyzing] = useState(false)
   const [summary, setSummary] = useState("All systems operating within normal parameters. One minor latency spike detected in us-east-1. ML models indicate 98% probability of automatic resolution.")
   const [recommended, setRecommended] = useState("Monitor us-east-1 RDS")
   const [confidence, setConfidence] = useState("98%")
+  const user = useStore((s) => s.user)
 
   const handleFullAnalysis = async () => {
     setAnalyzing(true)
     try {
       const res = await chatWithAI({
         message: "Give me a complete health summary of all monitored services right now. Keep it brief and professional. End with 'RECOMMENDED ACTION: [action]' and 'CONFIDENCE: [percent]%'.",
-        user_id: '00000000-0000-0000-0000-000000000001',
+        user_id: user?.id,
         conversation_history: [],
       })
       // API returns `reply` per ChatResponse schema

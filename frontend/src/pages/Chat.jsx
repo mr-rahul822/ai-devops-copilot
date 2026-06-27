@@ -5,11 +5,13 @@ import { getLatestMetrics } from '../api/metrics'
 import { getAlerts } from '../api/alerts'
 import ChatWindow from '../components/chat/ChatWindow'
 import ChatInput from '../components/chat/ChatInput'
+import useStore from '../store/useStore'
 import { format } from 'date-fns'
 
 export default function Chat() {
   const [messages, setMessages] = useState([])
   const [thinking, setThinking] = useState(false)
+  const user = useStore((s) => s.user)
   // Keep conversation_history in sync with messages for multi-turn context
   const conversationHistory = messages.map(m => ({ role: m.role, content: m.content }))
 
@@ -47,7 +49,7 @@ export default function Chat() {
     try {
       const res = await chatWithAI({
         message: text,
-        user_id: '00000000-0000-0000-0000-000000000001',
+        user_id: user?.id,
         conversation_history: conversationHistory,
       })
       const data = res.data

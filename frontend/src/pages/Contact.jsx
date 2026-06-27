@@ -185,23 +185,6 @@ export default function Contact() {
               </div>
             </section>
 
-            {/* Location Map */}
-            <section className="glass-panel rounded-2xl overflow-hidden relative h-64 border border-outline-variant/30">
-              <div className="absolute inset-0 bg-surface-container-low/85 z-10 flex flex-col justify-end p-6">
-                <div className="bg-surface/90 backdrop-blur-md border border-white/10 p-4 rounded-xl inline-block max-w-[250px] text-left">
-                  <h4 className="font-label-caps text-label-caps text-primary-fixed-dim mb-1 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-primary-container" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Based in the Cloud
-                  </h4>
-                  <p className="font-code-sm text-code-sm text-on-surface-variant">San Francisco HQ<br/>Terminal 4, Level 9</p>
-                </div>
-              </div>
-              {/* Map Placeholder Image */}
-              <div className="absolute inset-0 bg-cover bg-center opacity-70 mix-blend-screen z-0" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDCWMp4TaC2VxVFFB8dzOAbqaY6Qatk1BzScz9WW7Qgr-8GhHrt4pGNIn65v7yU86NzFezBTui59GwZG1duc4FrzbdAOoBN-GN04_VGJw3lxoT1Xr2m9ekyPoDNDUS7epc0ZH3unU7HTvdq3BU3HLBR1F60Q6zF2jJGtIRpWbsM4zliIDph5mupHh4OcGed4odaaVk_o54sL3Vve9MBr4yzRqt59VofN0ubdSaX4IPgOpXd7XNI74Pi')" }}></div>
-            </section>
           </div>
         </div>
       </main>

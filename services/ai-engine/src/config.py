@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     jwt_secret: str = ""
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     internal_secret: str = "devops-copilot-internal-2026"
+    frontend_url: str = "http://localhost:5173"
 
     class Config:
         env_file = ".env"

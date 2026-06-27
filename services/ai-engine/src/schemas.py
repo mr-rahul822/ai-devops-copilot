@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 # ── Diagnose ─────────────────────────────────────────────────────────────────
 
 class DiagnoseRequest(BaseModel):
-    user_id: str
+    user_id: Optional[str] = ""
     service_name: str
     alert_id: Optional[str] = None
     alert_type: Optional[str] = "UNKNOWN"
@@ -40,7 +40,7 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    user_id: str
+    user_id: Optional[str] = ""
     message: str
     service_name: Optional[str] = None
     conversation_history: list[ChatMessage] = Field(default_factory=list)

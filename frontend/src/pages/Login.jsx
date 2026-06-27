@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { loginUser, registerUser, validateMFA } from '../api/auth'
 
@@ -48,24 +48,75 @@ const LightningBackground = () => (
 )
 
 export default function Login() {
-  const [activeTab, setActiveTab] = useState(() => {
-    const hash = window.location.hash || ''
-    if (hash === '#features') return 'features'
-    if (hash === '#pricing') return 'pricing'
-    if (hash === '#docs') return 'docs'
-    return 'home'
-  })
+  const [activeTab, setActiveTab] = useState('home')
+
+  const scrollToSection = (id) => {
+    setActiveTab(id)
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+      window.history.pushState(null, '', `#${id}`)
+    }
+  }
 
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash || ''
-      if (hash === '#features') setActiveTab('features')
-      else if (hash === '#pricing') setActiveTab('pricing')
-      else if (hash === '#docs') setActiveTab('docs')
-      else if (hash === '#home' || !hash) setActiveTab('home')
+      const id = hash.replace('#', '')
+      if (id) {
+        const element = document.getElementById(id)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' })
+          setActiveTab(id)
+        }
+      } else {
+        const element = document.getElementById('home')
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' })
+          setActiveTab('home')
+        }
+      }
     }
+
+    // Scroll to initial hash on load
+    const initialHash = window.location.hash || ''
+    const initialId = initialHash.replace('#', '')
+    if (initialId) {
+      setTimeout(() => {
+        const element = document.getElementById(initialId)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' })
+          setActiveTab(initialId)
+        }
+      }, 100)
+    }
+
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
+  useEffect(() => {
+    const sections = ['home', 'features', 'pricing', 'docs']
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveTab(entry.target.id)
+        }
+      })
+    }, observerOptions)
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
   }, [])
 
   const [isLoginOpen, setIsLoginOpen] = useState(false)
@@ -264,10 +315,6 @@ export default function Login() {
               className="px-8 py-3 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps font-bold glow-primary transition-all hover:scale-105 cursor-pointer"
             >
               Start for Free
-            </button>
-            <button className="px-8 py-3 rounded-full glass-panel text-on-surface font-label-caps text-label-caps hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
-              Watch Demo
             </button>
           </div>
         </div>
@@ -729,7 +776,7 @@ export default function Login() {
       <nav className="bg-background/80 backdrop-blur-xl top-0 sticky z-30 border-b border-white/10 shadow-[0px_0px_20px_rgba(60,215,255,0.1)]">
         <div className="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
           <div
-            onClick={() => setActiveTab('home')}
+            onClick={() => scrollToSection('home')}
             className="flex items-center gap-4 cursor-pointer group"
           >
             <img alt="CloudyBro Logo" className="h-8 w-8 object-contain group-hover:scale-110 transition-transform" src="/logo.png" />
@@ -737,7 +784,7 @@ export default function Login() {
           </div>
           <div className="hidden md:flex items-center gap-8">
             <button
-              onClick={() => setActiveTab('features')}
+              onClick={() => scrollToSection('features')}
               className={`transition-colors duration-300 font-label-caps text-label-caps cursor-pointer ${
                 activeTab === 'features' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
               }`}
@@ -745,7 +792,7 @@ export default function Login() {
               Features
             </button>
             <button
-              onClick={() => setActiveTab('pricing')}
+              onClick={() => scrollToSection('pricing')}
               className={`transition-colors duration-300 font-label-caps text-label-caps cursor-pointer ${
                 activeTab === 'pricing' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
               }`}
@@ -753,13 +800,25 @@ export default function Login() {
               Pricing
             </button>
             <button
-              onClick={() => setActiveTab('docs')}
+              onClick={() => scrollToSection('docs')}
               className={`transition-colors duration-300 font-label-caps text-label-caps cursor-pointer ${
                 activeTab === 'docs' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
               }`}
             >
               Docs
             </button>
+            <Link
+              to="/about"
+              className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps cursor-pointer"
+            >
+              About Us
+            </Link>
+            <Link
+              to="/contact"
+              className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps cursor-pointer"
+            >
+              Contact
+            </Link>
             <button
               onClick={() => { setAuthTab('login'); setIsLoginOpen(true) }}
               className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-label-caps text-label-caps cursor-pointer"
@@ -779,11 +838,19 @@ export default function Login() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 w-full relative z-10 flex flex-col items-center pt-10 px-6">
-        {activeTab === 'home' && HomeContent()}
-        {activeTab === 'features' && FeaturesContent()}
-        {activeTab === 'pricing' && PricingContent()}
-        {activeTab === 'docs' && DocsContent()}
+      <main className="flex-grow w-full relative z-10 flex flex-col items-center pt-10 px-6 space-y-32">
+        <section id="home" className="w-full flex flex-col items-center scroll-mt-24">
+          {HomeContent()}
+        </section>
+        <section id="features" className="w-full flex flex-col items-center scroll-mt-24">
+          {FeaturesContent()}
+        </section>
+        <section id="pricing" className="w-full flex flex-col items-center scroll-mt-24">
+          {PricingContent()}
+        </section>
+        <section id="docs" className="w-full flex flex-col items-center scroll-mt-24">
+          {DocsContent()}
+        </section>
       </main>
 
       {/* Footer */}
@@ -807,9 +874,9 @@ export default function Login() {
           </div>
           <div className="flex flex-col gap-3">
             <span className="font-label-caps text-label-caps text-on-surface font-semibold mb-2">Product</span>
-            <button onClick={() => setActiveTab('features')} className="text-left text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline cursor-pointer">Features</button>
+            <button onClick={() => scrollToSection('features')} className="text-left text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline cursor-pointer">Features</button>
             <a className="text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline" href="#">Security</a>
-            <button onClick={() => setActiveTab('pricing')} className="text-left text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline cursor-pointer">Pricing</button>
+            <button onClick={() => scrollToSection('pricing')} className="text-left text-on-surface-variant font-body-md text-sm hover:text-primary-fixed transition-colors hover:underline cursor-pointer">Pricing</button>
           </div>
           <div className="flex flex-col gap-3">
             <span className="font-label-caps text-label-caps text-on-surface font-semibold mb-2">Legal &amp; Social</span>

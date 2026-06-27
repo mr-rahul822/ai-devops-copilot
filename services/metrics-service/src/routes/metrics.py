@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
@@ -58,6 +59,18 @@ async def require_auth(authorization: Optional[str] = Header(default=None)) -> d
     return await _verify_token(authorization)
 
 
+def _resolve_user_id(auth_data: dict) -> uuid.UUID:
+    """Extract user UUID from the JWT auth payload. Never falls back to default."""
+    user_data = auth_data.get("user", auth_data)
+    user_id_str = user_data.get("id") or user_data.get("userId") or user_data.get("user_id")
+    if not user_id_str:
+        raise HTTPException(status_code=401, detail="Cannot resolve user ID from token.")
+    try:
+        return uuid.UUID(str(user_id_str))
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid user ID in token.")
+
+
 # ---------------------------------------------------------------------------
 # GET /metrics/health
 # ---------------------------------------------------------------------------
@@ -78,11 +91,12 @@ async def get_latest(
     db: AsyncSession = Depends(get_db),
     _auth: dict = Depends(require_auth),
 ):
-    """Returns the single most recent metric for all services."""
-    user_id = _auth.get("user", {}).get("id", settings.default_user_id)
-    
+    """Returns the single most recent metric for all services owned by the authenticated user."""
+    user_id = _resolve_user_id(_auth)
+
     result = await db.execute(
         select(Metric)
+        .where(Metric.user_id == user_id)
         .distinct(Metric.service_name)
         .order_by(Metric.service_name, Metric.timestamp.desc())
     )
@@ -96,21 +110,24 @@ async def get_latest(
 
 @router.get("/history", response_model=list[MetricResponse])
 async def get_history(
-    user_id: Optional[str] = Query(default=None, description="UUID of the user"),
     service_name: Optional[str] = Query(default=None, description="Name of the monitored service"),
     hours: int = Query(default=1, ge=1, le=24, description="How many hours of history (1–24)"),
     db: AsyncSession = Depends(get_db),
     _auth: dict = Depends(require_auth),
 ):
-    """Returns all metric readings for the last N hours (default 1, max 24)."""
+    """Returns all metric readings for the last N hours (default 1, max 24) for the authenticated user."""
+    user_id = _resolve_user_id(_auth)
     since = datetime.utcnow() - timedelta(hours=hours)
 
-    query = select(Metric).where(Metric.timestamp >= since)
+    query = select(Metric).where(
+        Metric.user_id == user_id,
+        Metric.timestamp >= since,
+    )
     if service_name:
         query = query.where(Metric.service_name == service_name)
-    
+
     query = query.order_by(Metric.timestamp.asc())
-    
+
     result = await db.execute(query)
     rows = result.scalars().all()
     if not rows and service_name:
@@ -127,7 +144,6 @@ async def get_history(
 
 @router.get("", response_model=list[MetricResponse])
 async def get_metrics_root(
-    user_id: Optional[str] = Query(default=None, description="UUID of the user"),
     service_name: Optional[str] = Query(default=None, description="Name of the monitored service"),
     hours: int = Query(default=1, ge=1, le=24, description="How many hours of history (1–24)"),
     db: AsyncSession = Depends(get_db),
@@ -135,7 +151,7 @@ async def get_metrics_root(
 ):
     """Alias for /metrics/history — the React frontend calls GET /metrics."""
     return await get_history(
-        user_id=user_id, service_name=service_name, hours=hours, db=db, _auth=_auth
+        service_name=service_name, hours=hours, db=db, _auth=_auth
     )
 
 
@@ -149,7 +165,8 @@ async def get_summary(
     _auth: dict = Depends(require_auth),
 ):
     """
-    Returns aggregated metrics for the dashboard stat cards.
+    Returns aggregated metrics for the dashboard stat cards,
+    scoped to the authenticated user.
 
     Response shape:
     {
@@ -163,6 +180,7 @@ async def get_summary(
 
     Calculated from the last 5 minutes of metric data.
     """
+    user_id = _resolve_user_id(_auth)
     since = datetime.utcnow() - timedelta(minutes=5)
 
     result = await db.execute(
@@ -172,7 +190,10 @@ async def get_summary(
             func.avg(Metric.ram_percent).label("avg_ram"),
             func.max(Metric.cpu_percent).label("peak_cpu"),
             func.count(Metric.id).label("total_readings"),
-        ).where(Metric.timestamp >= since)
+        ).where(
+            Metric.user_id == user_id,
+            Metric.timestamp >= since,
+        )
     )
     row = result.one()
 
@@ -204,11 +225,12 @@ async def get_summary(
 
 @router.get("/services", response_model=ServicesResponse)
 async def get_services(
-    user_id: str = Query(..., description="UUID of the user"),
     db: AsyncSession = Depends(get_db),
     _auth: dict = Depends(require_auth),
 ):
-    """Returns a distinct list of service names being monitored for a user."""
+    """Returns a distinct list of service names being monitored for the authenticated user."""
+    user_id = _resolve_user_id(_auth)
+
     result = await db.execute(
         select(distinct(Metric.service_name)).where(Metric.user_id == user_id)
     )

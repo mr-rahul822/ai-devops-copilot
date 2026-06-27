@@ -10,6 +10,7 @@ The Action Service executes AI-recommended infrastructure fixes:
 
 import logging
 import platform
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -75,8 +76,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:5173")],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

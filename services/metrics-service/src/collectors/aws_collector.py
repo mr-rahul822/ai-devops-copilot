@@ -9,6 +9,10 @@ Collects:
 
 If the CloudWatch Agent is NOT installed on the EC2 instance, RAM/Disk/Network
 metrics will be returned as 0.0 and a warning will be logged.
+
+Multi-tenant: The caller (scheduler) provides an already-assumed boto3 Session,
+the target region, and the owning user_id. This module never reads from the
+global settings singleton — all credentials are passed explicitly.
 """
 
 import logging
@@ -17,22 +21,10 @@ from datetime import datetime, timedelta, timezone
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from src.config import settings
-
 logger = logging.getLogger(__name__)
 
 # Custom namespace configured in the CloudWatch Agent on EC2
 CW_AGENT_NAMESPACE = "DevOpsCopilot"
-
-
-def get_boto_session():
-    """Create a Boto3 session using temporary STS credentials from config."""
-    return boto3.Session(
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key,
-        aws_session_token=settings.aws_session_token,
-        region_name=settings.aws_default_region,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -195,24 +187,24 @@ def _get_cloudwatch_agent_metrics(
 # Main collector
 # ---------------------------------------------------------------------------
 
-def collect() -> list[dict]:
+def collect(boto3_session: boto3.Session, region: str, user_id: str) -> list[dict]:
     """
-    Collects metrics from all running AWS EC2 instances.
+    Collects metrics from all running AWS EC2 instances using the provided
+    boto3 session (already authenticated via STS AssumeRole for a specific user).
 
     - CPU utilisation  → AWS/EC2 standard namespace (always available)
     - RAM, Disk, Network → DevOpsCopilot custom namespace (CloudWatch Agent)
 
+    Args:
+        boto3_session: An already-assumed boto3.Session for this user's AWS account.
+        region: The AWS region to query.
+        user_id: The real user UUID (from the cloud_credentials table).
+
     Returns a list of raw dicts consumed by the normalizer.
     """
-    if not settings.aws_access_key_id or not settings.aws_secret_access_key:
-        logger.warning("AWS credentials not available — skipping EC2 collection. Connect via Cloud Configuration to start.")
-        return []
-
     try:
-        session = get_boto_session()
-        ec2 = session.client("ec2")
-        cw = session.client("cloudwatch")
-        region = settings.aws_default_region
+        ec2 = boto3_session.client("ec2", region_name=region)
+        cw = boto3_session.client("cloudwatch", region_name=region)
 
         # 1. Discover running instances
         response = ec2.describe_instances(
@@ -252,7 +244,7 @@ def collect() -> list[dict]:
             agent_metrics = _get_cloudwatch_agent_metrics(cw, instance_id)
 
             results.append({
-                "user_id": settings.default_user_id,
+                "user_id": user_id,
                 "service_name": service_name or f"aws-ec2-{instance_id}",
                 "cpu_percent": cpu_percent,
                 "ram_percent": agent_metrics["ram_percent"],
@@ -265,8 +257,8 @@ def collect() -> list[dict]:
             })
 
             logger.info(
-                "Collected [%s/%s]: cpu=%.1f%% ram=%.1f%% disk=%.1f%%",
-                service_name, instance_id,
+                "Collected [%s/%s] (user=%s): cpu=%.1f%% ram=%.1f%% disk=%.1f%%",
+                service_name, instance_id, user_id,
                 cpu_percent,
                 agent_metrics["ram_percent"],
                 agent_metrics["disk_percent"],
