@@ -1,13 +1,16 @@
 import axios from 'axios'
 
-// In production, VITE_* vars are empty strings — meaning "same origin" (requests
-// go to the Nginx reverse proxy on the same host). Only fall back to localhost
-// when the env var is completely absent (local dev without .env).
-const AUTH_URL = import.meta.env.VITE_AUTH_URL ?? 'http://localhost:3001'
-const METRICS_URL = import.meta.env.VITE_METRICS_URL ?? 'http://localhost:8001'
-const ALERTS_URL = import.meta.env.VITE_ALERTS_URL ?? 'http://localhost:3003'
-const AI_URL = import.meta.env.VITE_AI_URL ?? 'http://localhost:8002'
-const ACTIONS_URL = import.meta.env.VITE_ACTIONS_URL ?? 'http://localhost:8003'
+// Default to empty string (same-origin) for production.
+// Nginx reverse proxy handles routing /auth/*, /metrics/*, etc. to backend containers.
+// For local dev, create frontend/.env with:
+//   VITE_AUTH_URL=http://localhost:3001
+//   VITE_METRICS_URL=http://localhost:8001
+//   etc.
+const AUTH_URL = import.meta.env.VITE_AUTH_URL || ''
+const METRICS_URL = import.meta.env.VITE_METRICS_URL || ''
+const ALERTS_URL = import.meta.env.VITE_ALERTS_URL || ''
+const AI_URL = import.meta.env.VITE_AI_URL || ''
+const ACTIONS_URL = import.meta.env.VITE_ACTIONS_URL || ''
 
 function createClient(baseURL) {
   const instance = axios.create({ baseURL, timeout: 30000 })
