@@ -7,8 +7,7 @@ services:
       POSTGRES_DB: authdb
       POSTGRES_USER: authuser
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
+    # No public ports — database is internal only
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
@@ -43,15 +42,12 @@ services:
     depends_on:
       zookeeper:
         condition: service_healthy
-    ports:
-      - "9092:9092"
-      - "29092:29092"
+    # No public ports — Kafka is internal only
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      # Expose 9092 inside the Docker network, and 29092 to the host machine
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     networks:
@@ -70,7 +66,6 @@ services:
         condition: service_healthy
     networks:
       - copilot-net
-    # Creates the metrics-stream topic and then exits
     command: >
       bash -c " echo 'Waiting for Kafka to be ready...' && cub kafka-ready -b kafka:9092 1 20 && kafka-topics --create --topic metrics-stream --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 && echo 'Topic created successfully.' "
 
@@ -79,8 +74,7 @@ services:
     build: ../services/auth-service
     container_name: auth-service
     restart: unless-stopped
-    ports:
-      - "3001:3001"
+    # No public ports — proxied via Nginx
     environment:
       PORT: 3001
       DB_HOST: postgres
@@ -89,6 +83,7 @@ services:
       DB_USER: authuser
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       postgres:
         condition: service_healthy
@@ -102,8 +97,7 @@ services:
     env_file:
       - .env
       - ../services/metrics-service/.env
-    ports:
-      - "8001:8001"
+    # No public ports — proxied via Nginx
     environment:
       PORT: 8001
       DATABASE_URL: postgresql+asyncpg://authuser:${POSTGRES_PASSWORD}@postgres:5432/metricsdb
@@ -111,11 +105,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       DEFAULT_USER_ID: 00000000-0000-0000-0000-000000000001
       COLLECTION_INTERVAL_SECONDS: 60
-      ENVIRONMENT: development
+      ENVIRONMENT: production
       KAFKA_BROKER: kafka:9092
       PLATFORM_ACCOUNT_ID: ${PLATFORM_ACCOUNT_ID:-525987623256}
-      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-2}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-south-1}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-I_NZZVow_HLrCYvQyOLDQlpr38VLtCAuZn_FyBo0Nvw=}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       postgres:
         condition: service_healthy
@@ -133,8 +128,7 @@ services:
     build: ../services/alert-service
     container_name: alert-service
     restart: unless-stopped
-    ports:
-      - "3003:3003"
+    # No public ports — proxied via Nginx
     environment:
       PORT: 3003
       DB_HOST: postgres
@@ -146,6 +140,7 @@ services:
       KAFKA_BROKER: kafka:9092
       KAFKA_GROUP_ID: alert-service-group
       AUTH_SERVICE_URL: http://auth-service:3001
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       postgres:
         condition: service_healthy
@@ -162,8 +157,7 @@ services:
     restart: unless-stopped
     env_file:
       - ../services/ai-engine/.env
-    ports:
-      - "8002:8002"
+    # No public ports — proxied via Nginx
     environment:
       PORT: 8002
       DATABASE_URL: postgresql+asyncpg://authuser:${POSTGRES_PASSWORD}@postgres:5432/authdb
@@ -174,6 +168,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
       INTERNAL_SECRET: ${INTERNAL_SECRET:-devops-copilot-internal-2026}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     volumes:
       - ../model-cache:/root/.cache/huggingface
     depends_on:
@@ -197,8 +192,7 @@ services:
     env_file:
       - .env
       - ../services/action-service/.env
-    ports:
-      - "8003:8003"
+    # No public ports — proxied via Nginx
     environment:
       PORT: 8003
       DATABASE_URL: postgresql+asyncpg://authuser:${POSTGRES_PASSWORD}@postgres:5432/actionsdb
@@ -207,11 +201,10 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       DRY_RUN: "true"
       PLATFORM_ACCOUNT_ID: ${PLATFORM_ACCOUNT_ID:-525987623256}
-      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-2}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-south-1}
       INTERNAL_SECRET: ${INTERNAL_SECRET:-devops-copilot-internal-2026}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     volumes:
-      # Use the Linux docker socket path on all operating systems.
-      # Docker Desktop (WSL2 backend) automatically maps this to the Windows Docker engine.
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       postgres:
@@ -226,13 +219,13 @@ services:
       - 8.8.8.8
       - 1.1.1.1
 
-  # ── FRONTEND (Phase 7) ───────────────────────────────────────────────────
+  # ── FRONTEND ──────────────────────────────────────────────────────────────
   frontend:
     build: ../frontend
     container_name: frontend
     restart: unless-stopped
     ports:
-      - "5173:80"
+      - "80:80"
     depends_on:
       auth-service:
         condition: service_started
